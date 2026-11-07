@@ -4,7 +4,7 @@ import { h, icone, TRACES } from './dom.js';
 import { t } from './textes.js';
 import { nomMois, decalerMois } from './ecran-recap.js';
 
-const COULEURS_ZONES = ['var(--projet-0)', 'var(--projet-interne)', 'var(--projet-1)', 'var(--projet-4)', 'var(--projet-2)'];
+const COULEURS_ZONES = ['var(--projet-0)', 'var(--projet-2)', 'var(--projet-1)', 'var(--projet-4)', 'var(--projet-7)'];   // pas d'orange : réservé aux alertes
 const TRACE_COPIER = 'M8 8h12v12H8zM16 8V4H4v12h4';
 
 /**

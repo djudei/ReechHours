@@ -1,78 +1,52 @@
-/* Hours — esprit Apple : police du système, grands titres, listes groupées, barre d'onglets translucide.
-   Clair et sombre suivent le réglage de l'appareil. Couleurs = jetons ci-dessous, jamais en dur ailleurs. */
+/* ReechHours — esprit Apple (police du système, grands titres, listes groupées) aux couleurs de l'agence.
+   Couleurs = jetons ci-dessous, jamais en dur ailleurs. */
 
 :root {
-  --fond: #F2F2F7;
+  /* Charte de l'agence (comme Timesheets+) : fond crème, bleu nuit, accent orange, rose pour les journées complètes. */
+  --bleu-nuit: #0A0A2A;
+  --orange: #E94315;
+  --orange-texte: #C2340D;      /* orange un peu plus sombre : lisible en petit texte sur le fond crème */
+  --rose: #F6A8FA;
+  --orange-pale: #FFF1ED;       /* fond des créneaux à attribuer */
+
+  --fond: #FBF9F6;
   --carte: #FFFFFF;
-  --champ: #E3E3E8;
-  --texte: #000000;
-  --secondaire: #6C6C70;
-  --tertiaire: #C4C4C7;
-  --separateur: #D1D1D6;
-  --piste: #E5E5EA;
-  --accent: #5856D6;
+  --champ: #EFEBE5;
+  --texte: var(--bleu-nuit);
+  --secondaire: #5E5E73;
+  --tertiaire: #C9C4BD;
+  --separateur: #E6E1DA;
+  --piste: #ECE7E0;
+  --accent: var(--bleu-nuit);   /* boutons, onglet actif, liens */
   --sur-accent: #FFFFFF;
-  --signal: #FFB800;
-  --signal-texte: #9A5B00;
-  --erreur: #D70015;
-  --neutre: #AEAEB2;
-  --barre: rgba(249, 249, 251, 0.82);
-  --survol: rgba(0, 0, 0, 0.04);
-  --voile: rgba(0, 0, 0, 0.32);
+  --selection: var(--orange);   /* jour et mois choisis */
+  --signal: var(--orange);      /* à attribuer, alertes */
+  --signal-texte: var(--orange-texte);
+  --erreur: var(--orange-texte);
+  --neutre: #AEA9A2;
+  --barre: rgba(251, 249, 246, 0.86);
+  --survol: rgba(10, 10, 42, 0.04);
+  --voile: rgba(10, 10, 42, 0.36);
   --carte-segment: #FFFFFF;
-  --badge-fond: #E9E8FB;
-  --badge-texte: #3F3DB8;
-  --projet-0: #007AFF;
-  --projet-1: #AF52DE;
-  --projet-2: #30B0C7;
-  --projet-3: #FF2D55;
-  --projet-4: #FF9500;
-  --projet-5: #A2845E;
-  --projet-6: #00C7BE;
-  --projet-7: #5E5CE6;
-  --projet-interne: #34C759;
-  --feuille: #F2F2F7;
+  --badge-fond: var(--orange-pale);
+  --badge-texte: var(--orange-texte);
+  /* Couleurs des projets : variées, sans orange ni rose (réservés aux alertes et aux journées complètes). */
+  --projet-0: #2F4BD8;
+  --projet-1: #7B5CD6;
+  --projet-2: #0F8F8F;
+  --projet-3: #B8336A;
+  --projet-4: #D9A400;
+  --projet-5: #8A6A50;
+  --projet-6: #2F8F46;
+  --projet-7: #4E5D8C;
+  --projet-interne: var(--orange);   /* lignes internes en orange, comme dans Timesheets+ */
+  --feuille: #FBF9F6;
   --carte-feuille: #FFFFFF;
   --rayon-carte: 14px;
   --rayon-grand: 22px;
   --police: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
   --transition: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fond: #000000;
-    --carte: #1C1C1E;
-    --champ: #2C2C2E;
-    --texte: #FFFFFF;
-    --secondaire: #98989F;
-    --tertiaire: #5A5A5F;
-    --separateur: #38383A;
-    --piste: #2C2C2E;
-    --accent: #7D7AFF;
-    --signal: #FFD60A;
-    --signal-texte: #FFD60A;
-    --erreur: #FF6961;
-    --neutre: #636366;
-    --barre: rgba(22, 22, 24, 0.78);
-    --survol: rgba(255, 255, 255, 0.05);
-    --voile: rgba(0, 0, 0, 0.6);
-    --carte-segment: #636366;
-    --badge-fond: #2B2A55;
-    --badge-texte: #B7B5FF;
-    --feuille: #1C1C1E;
-    --carte-feuille: #2C2C2E;
-    --projet-0: #0A84FF;
-    --projet-1: #BF5AF2;
-    --projet-2: #64D2FF;
-    --projet-3: #FF375F;
-    --projet-4: #FF9F0A;
-    --projet-5: #AC8E68;
-    --projet-6: #63E6E2;
-    --projet-7: #8E8CFF;
-    --projet-interne: #30D158;
-  }
+  color-scheme: light;   /* la charte est claire : pas de mode sombre */
 }
 
 * { box-sizing: border-box; }
@@ -206,8 +180,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   font-weight: 500;
   color: var(--secondaire);
 }
-.colonne.aujourdhui .lettre { color: var(--accent); font-weight: 700; }
-.colonne.choisie .lettre { background: var(--accent); color: var(--sur-accent); font-weight: 700; }
+.colonne.aujourdhui .lettre { color: var(--selection); font-weight: 700; }
+.colonne.choisie .lettre { background: var(--selection); color: var(--sur-accent); font-weight: 700; }
 
 /* ---------- Liste groupée ---------- */
 .entete-section {
@@ -338,13 +312,15 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .bloc:hover { filter: brightness(0.97); }
 .bloc:active { transform: scale(0.98); }
-.bloc.libre { background: color-mix(in srgb, var(--signal) 12%, var(--carte)); box-shadow: none; border: 1.5px dashed var(--signal); }
+.bloc.libre { background: var(--orange-pale); box-shadow: none; border: 1.5px dashed var(--signal); }
 .bloc.court { flex-direction: row; align-items: center; gap: 8px; padding-top: 0; padding-bottom: 0; }
 .bloc-titre { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .bloc-detail { font-size: 12px; color: var(--secondaire); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .bloc.libre .bloc-detail { color: var(--signal-texte); font-weight: 600; }
 .journees { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .bloc.journee { position: relative; margin-top: 0; min-height: 44px; justify-content: center; }
+/* Journée complète (congé toute la journée) : rose de la charte. */
+.bloc.journee:not(.libre) { background: color-mix(in srgb, var(--rose) 45%, var(--carte)); box-shadow: inset 3px 0 0 var(--rose); }
 
 /* ---------- Écrans centrés (connexion, Sheet, erreur) ---------- */
 .ecran-centre {
