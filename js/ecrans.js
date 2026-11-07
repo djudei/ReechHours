@@ -5,7 +5,7 @@ import { LIEN_APPLI_ACTUELLE } from './config.js';
 
 export function ecranConnexion({ configure, onConnecter, enCours }) {
   return h('section', { class: 'ecran ecran-centre' },
-    h('div', { class: 'logo', 'aria-hidden': 'true' }, 'H'),
+    h('img', { class: 'logo logo-image', src: 'img/icone-192.png', alt: '' }),
     h('h1', {}, t('connexion.titre')),
     h('p', { class: 'secondaire' }, t('connexion.texte')),
     configure
@@ -23,7 +23,7 @@ export function ecranSheet({ onCreer, onValider, erreur, enCours, formulaireOuve
     onValider(champ.value);
   };
   return h('section', { class: 'ecran ecran-centre' },
-    h('div', { class: 'logo', 'aria-hidden': 'true' }, 'H'),
+    h('img', { class: 'logo logo-image', src: 'img/icone-192.png', alt: '' }),
     h('h1', {}, t('sheet.titre')),
     h('p', { class: 'secondaire' }, t('sheet.creer.texte')),
     erreur ? h('p', { class: 'erreur', role: 'alert' }, erreur) : null,

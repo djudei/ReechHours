@@ -347,6 +347,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   font-weight: 700;
 }
 .logo-gris { background: var(--carte); color: var(--secondaire); }
+.logo-image { display: block; object-fit: cover; background: none; }
 .bouton-principal {
   min-height: 50px;
   padding: 0 24px;
