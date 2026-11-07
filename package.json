@@ -1,0 +1,9 @@
+{
+  "name": "hours-web",
+  "private": true,
+  "type": "module",
+  "description": "Hours, version hébergée : la page lit l'Agenda et le Google Sheet de la personne, directement depuis son navigateur.",
+  "scripts": {
+    "test": "TZ=Europe/Paris node --test tests/*.test.js"
+  }
+}
