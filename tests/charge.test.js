@@ -52,3 +52,10 @@ test('écriture : la colonne du mois est remplacée, mois triés, en-têtes « N
   assert.deepEqual(g[g.length - 1], ['Modifié le', '31/10/2026 18:00', '06/11/2026 10:00']);
   assert.equal(moisSuivant('2026-12'), '2027-01');
 });
+
+test('« Projets clôturés » : 6e intitulé, après « Projets en clôture » ; jusqu\'à 6 zones par mois', async () => {
+  const { INTITULES_PAR_DEFAUT } = await import('../js/charge.js');
+  assert.deepEqual(INTITULES_PAR_DEFAUT, ['AO & Reco', 'Projets en cours', 'Projets à venir', 'Projets en clôture', 'Projets clôturés', 'Développement commercial']);
+  const six = INTITULES_PAR_DEFAUT.map((categorie) => ({ categorie, elements: ['x'] }));
+  assert.equal(verifierZones(six, INTITULES_PAR_DEFAUT).length, 6);
+});

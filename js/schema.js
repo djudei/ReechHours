@@ -48,7 +48,7 @@ export const CHARGE = {
   ENTETE: 'Intitulé',
   LIGNE_MODIFIE: 'Modifié le',
   ZONE_SANS_MISSION: '—',
-  INTITULES: ['AO & Reco', 'Projets en cours', 'Projets à venir', 'Projets en clôture', 'Développement commercial']
+  INTITULES: ['AO & Reco', 'Projets en cours', 'Projets à venir', 'Projets en clôture', 'Projets clôturés', 'Développement commercial']
 };
 
 // Règles de l'agence, fixes (les mêmes que Timesheets+) : 7h par jour, du lundi au vendredi, base 35h.
