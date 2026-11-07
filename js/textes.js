@@ -59,7 +59,7 @@ const FR = {
   'tri.projets': 'Projets',
   'tri.special.Pause': 'Pause',
   'tri.special.Non travaillé': 'Congé',
-  'tri.special.Ignoré': 'Pas du travail',
+  'tri.special.Ignoré': 'Ignoré',
   'tri.enregistre': 'Enregistré dans ton Sheet.',
   'tri.fini': 'Tout est trié pour cette semaine.',
   'semaine.synchro': '{nombre} nouveaux créneaux enregistrés dans ton Sheet.',
@@ -111,7 +111,7 @@ const FR = {
   'manuel.erreur.heure': 'Heure illisible : {heure}.',
   'manuel.erreur.quart': 'Choisis une heure au quart d\'heure ({heure}).',
   'manuel.erreur.ordre': 'L\'heure de fin doit être après l\'heure de début.',
-  'manuel.erreur.chevauche': 'Chevauche « {titre} » ({debut}–{fin}). Passe-le en Pas du travail ou change les horaires.',
+  'manuel.erreur.chevauche': 'Chevauche « {titre} » ({debut}–{fin}). Passe-le en Ignoré ou change les horaires.',
   'manuel.erreur.titre': 'Indique un intitulé ({max} caractères max).',
 
   'categorie.projet': 'Projets clients',

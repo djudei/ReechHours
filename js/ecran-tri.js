@@ -1,4 +1,4 @@
-// Feuille « Trier » : un créneau à la fois, on choisit son projet (ou Pause, Congé, Pas du travail).
+// Feuille « Trier » : un créneau à la fois, on choisit son projet (ou Pause, Congé, Ignoré).
 // Elle monte depuis le bas, par-dessus la semaine ; Échap ou « Fermer » la referme.
 import { h, icone } from './dom.js';
 import { t } from './textes.js';

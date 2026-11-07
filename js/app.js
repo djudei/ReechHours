@@ -224,7 +224,7 @@ function ouvrirTri(file) {
   if (!file.length) return;
   changer({ tri: { file, position: 0, enCours: false, erreur: '', mode: '' } });
   rendre();
-  document.querySelector('.feuille input')?.focus({ preventScroll: true });
+  // Pas de focus sur la recherche : le clavier ne s'ouvre qu'en touchant le champ (plus de place pour la liste).
 }
 
 function fermerTri() {
