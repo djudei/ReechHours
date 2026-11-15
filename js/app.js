@@ -330,6 +330,12 @@ function fermerNouveau() {
 
 async function creerManuel(choix, champs) {
   const { nouveau } = etat;
+  const debutSuivi = etat.donnees.reglages.debutSuivi;
+  if (debutSuivi && nouveau.date < debutSuivi) {
+    changer({ nouveau: { ...nouveau, ...champs, erreur: t('manuel.erreur.avantSuivi', { date: debutSuivi.split('-').reverse().join('/') }) } });
+    rendre();
+    return;
+  }
   changer({ nouveau: { ...nouveau, ...champs, enCours: true, erreur: '' } });
   rendre();
   try {

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { verifierReglages, planReglages, initialesProposees, ecrireHeuresParJour } from '../js/reglages-edition.js';
 
-const saisie = { nomDocs: '  Camille   D ', initiales: '', posteDocs: 'Chef de projet', prenomDestinataire: 'Alix', emailDestinataire: ' Alix@Exemple.fr ' };
+const saisie = { nomDocs: '  Camille   D ', initiales: '', posteDocs: 'Chef de projet', prenomDestinataire: 'Alix', emailDestinataire: ' Alix@Exemple.fr ', debutSuivi: '2026-10-01' };
 
 test('initiales proposées : « Camille D » → CD, « Benjamin LS » → BLS, « Élodie » → E', () => {
   assert.equal(initialesProposees('Camille D'), 'CD');
@@ -14,7 +14,9 @@ test('initiales proposées : « Camille D » → CD, « Benjamin LS » → BLS, 
 
 test('vérification : valeurs nettoyées ; nom vide, initiales ou email illisibles → erreur', () => {
   const p = verifierReglages(saisie);
-  assert.deepEqual(p, { nomDocs: 'Camille D', initiales: 'CD', posteDocs: 'Chef de projet', prenomDestinataire: 'Alix', emailDestinataire: 'alix@exemple.fr' });
+  assert.deepEqual(p, { nomDocs: 'Camille D', initiales: 'CD', posteDocs: 'Chef de projet', prenomDestinataire: 'Alix', emailDestinataire: 'alix@exemple.fr', debutSuivi: '2026-10-01' });
+  assert.throws(() => verifierReglages({ ...saisie, debutSuivi: '' }));
+  assert.throws(() => verifierReglages({ ...saisie, debutSuivi: '2026-02-30' }));
   assert.equal(verifierReglages({ ...saisie, initiales: 'cdx' }).initiales, 'CDX');
   assert.throws(() => verifierReglages({ ...saisie, nomDocs: ' ' }));
   assert.throws(() => verifierReglages({ ...saisie, initiales: 'ABCDEF' }));
@@ -30,7 +32,7 @@ test('onglet Réglages : chaque valeur sur la ligne de son étiquette, ancienne 
     { plage: "'Réglages'!B5", valeurs: [['CD']] },
     { plage: "'Réglages'!B2", valeurs: [['alix@exemple.fr']] }
   ]);
-  assert.deepEqual(plan.ajouts, [['Poste dans les docs', 'Chef de projet'], ['Prénom destinataire', 'Alix']]);
+  assert.deepEqual(plan.ajouts, [['Poste dans les docs', 'Chef de projet'], ['Prénom destinataire', 'Alix'], ['Début du suivi', '2026-10-01']]);
   // « Écriture docs réels » n'est jamais touché depuis cet écran.
   assert.ok(!plan.modifications.some((m) => m.plage.endsWith('B3')));
 });

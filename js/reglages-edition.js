@@ -3,6 +3,7 @@
 // Les temps de travail (7h, lundi–vendredi, base 35h) sont ceux de l'agence : ils ne se règlent pas ici.
 import { t } from './textes.js';
 import { ONGLETS, REGLAGES, ANCIENNES_ETIQUETTES } from './schema.js';
+import { lireDateSuivi } from './regles.js';
 
 export const ORDRE_JOURS = [1, 2, 3, 4, 5, 6, 0];
 const LONGUEUR_MAX_NOM = 60;
@@ -42,7 +43,11 @@ export function verifierReglages(saisie) {
   if (emailDestinataire && !FORMAT_EMAIL.test(emailDestinataire)) throw new Error(t('reglages.erreur.email', { email: emailDestinataire }));
   const prenomDestinataire = texte(saisie.prenomDestinataire);
   if (prenomDestinataire.length > LONGUEUR_MAX_NOM) throw new Error(t('reglages.erreur.prenomLong', { max: LONGUEUR_MAX_NOM }));
-  return { nomDocs, initiales, posteDocs, emailDestinataire, prenomDestinataire };
+  // Début du suivi : avant cette date, rien n'est enregistré ni compté. Rien n'est effacé : changer la date
+  // ne fait que changer ce qui compte (les créneaux plus anciens restent dans le Sheet).
+  const debutSuivi = lireDateSuivi(saisie.debutSuivi);
+  if (!debutSuivi) throw new Error(t('reglages.erreur.debut'));
+  return { nomDocs, initiales, posteDocs, emailDestinataire, prenomDestinataire, debutSuivi };
 }
 
 /**
@@ -55,7 +60,8 @@ export function planReglages(lignes, propres) {
     [REGLAGES.initiales, propres.initiales],
     [REGLAGES.posteDocs, propres.posteDocs],
     [REGLAGES.prenomDestinataire, propres.prenomDestinataire],
-    [REGLAGES.emailDestinataire, propres.emailDestinataire]
+    [REGLAGES.emailDestinataire, propres.emailDestinataire],
+    [REGLAGES.debutSuivi, propres.debutSuivi]
   ];
   const ligneDe = new Map();
   lignes.forEach((ligne, i) => {

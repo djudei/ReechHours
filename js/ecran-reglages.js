@@ -5,7 +5,6 @@ import { h } from './dom.js';
 import { t } from './textes.js';
 import { initialesProposees } from './reglages-edition.js';
 
-const enDateFr = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
 
 /**
  * vue : { enCours, erreur, saisie } ; actions : { enregistrer(saisie), ouvrirSheet(), changerSheet(), deconnecter() }
@@ -18,6 +17,7 @@ export function ecranReglages(reglagesSheet, vue, actions, { demo }) {
   const initiales = champ('reglage-initiales', r.initiales, { maxlength: 5, autocapitalize: 'characters', placeholder: initialesProposees(r.nomDocs) || 'JM' });
   const poste = champ('reglage-poste', r.posteDocs, { maxlength: 60, placeholder: 'ex. Account manager' });
   const prenomDest = champ('reglage-prenom-dest', r.prenomDestinataire, { maxlength: 60 });
+  const debutSuivi = h('input', { id: 'reglage-debut', type: 'date', value: r.debutSuivi || '' });
   const emailDest = champ('reglage-email-dest', r.emailDestinataire, { type: 'email', inputmode: 'email', autocapitalize: 'off', maxlength: 120 });
   nomDocs.addEventListener('input', () => { initiales.placeholder = initialesProposees(nomDocs.value) || 'JM'; });
 
@@ -25,7 +25,7 @@ export function ecranReglages(reglagesSheet, vue, actions, { demo }) {
     evenement.preventDefault();
     actions.enregistrer({
       nomDocs: nomDocs.value, initiales: initiales.value, posteDocs: poste.value,
-      prenomDestinataire: prenomDest.value, emailDestinataire: emailDest.value
+      prenomDestinataire: prenomDest.value, emailDestinataire: emailDest.value, debutSuivi: debutSuivi.value
     });
   };
   const ligne = (id, libelle, element) => h('label', { class: 'champ-ligne', for: id }, h('span', {}, libelle), element);
@@ -47,12 +47,12 @@ export function ecranReglages(reglagesSheet, vue, actions, { demo }) {
         ligne('reglage-prenom-dest', t('reglages.prenomDestinataire'), prenomDest),
         ligne('reglage-email-dest', t('reglages.emailDestinataire'), emailDest)),
       aide(t('reglages.partage.aide')),
+      groupe(t('reglages.temps'),
+        ligne('reglage-debut', t('reglages.debutSuivi'), debutSuivi),
+        info(t('reglages.regleAgence'), t('reglages.regleAgence.valeur'))),
+      aide(t('reglages.temps.aide')),
       vue.erreur ? h('p', { class: 'note erreur', role: 'alert' }, vue.erreur) : null,
       h('button', { class: 'bouton-principal bouton-large', type: 'submit', disabled: vue.enCours }, t('reglages.enregistrer'))),
-    ...groupe(t('reglages.temps'),
-      info(t('reglages.debutSuivi'), enDateFr(reglagesSheet.debutSuivi) || '—'),
-      info(t('reglages.regleAgence'), t('reglages.regleAgence.valeur'))),
-    aide(t('reglages.temps.aide')),
     ...groupe(t('reglages.sheet'),
       demo ? null : h('button', { class: 'ligne ligne-bouton lien-ligne', type: 'button', onclick: actions.ouvrirSheet }, t('reglages.ouvrirSheet')),
       demo ? null : h('button', { class: 'ligne ligne-bouton lien-ligne', type: 'button', onclick: actions.changerSheet }, t('reglages.changerSheet')),
