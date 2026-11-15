@@ -19,5 +19,9 @@
 <body>
   <div id="appli"></div>
   <noscript>ReechHours a besoin de JavaScript pour fonctionner.</noscript>
+  <script>
+    // Mises à jour visibles tout de suite (voir sw.js) ; sans effet si le navigateur ne sait pas faire.
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  </script>
 </body>
 </html>

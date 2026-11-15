@@ -90,8 +90,13 @@ function boutonChoix(code, tousProjets, choixActuel, actions, enCours) {
 /**
  * Projets actifs, classés par numéro (« 2 » avant « 10 » : comparaison des nombres dans le texte).
  */
+// Ordre des listes de choix : projets clients d'abord, puis les autres catégories, les lignes internes en dernier
+// (Pause, Congé et Ignoré viennent après, en boutons). Dans chaque groupe, par N°.
+const ORDRE_TYPES = { projet: 0, autre: 1, interne: 2 };
+
 export function projetsPourTri(projets) {
+  const rang = (p) => ORDRE_TYPES[p.type] ?? 1;
   return projets
     .filter((p) => p.statut === 'actif')
-    .sort((a, b) => a.code.localeCompare(b.code, 'fr', { numeric: true, sensitivity: 'base' }));
+    .sort((a, b) => rang(a) - rang(b) || a.code.localeCompare(b.code, 'fr', { numeric: true, sensitivity: 'base' }));
 }
