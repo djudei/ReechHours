@@ -52,7 +52,7 @@ function contenu(recap, donnees, vue, actions) {
     h('div', { class: `tuiles${recap.avecBase ? '' : ' une-tuile'}` },
       tuile(t('recap.travaille'), duree(recap.totalTravailleMinutes), enJours(recap.totalTravailleMinutes, mpj)),
       recap.avecBase ? tuile(t('recap.base'), duree(recap.totalBaseMinutes),
-        `${t('recap.base.detail', { jours: String(recap.totalBaseMinutes / mpj).replace('.', ','), duree: duree(mpj) })}${aDate}`) : null,
+        `${t('recap.base.detail', { jours: joursTexte(recap.totalBaseMinutes, mpj), duree: duree(mpj) })}${aDate}`) : null,
       recap.avecBase ? tuile(ecart >= 0 ? t('recap.audela') : t('recap.enDessous'),
         `${ecart > 0 ? '+' : ecart < 0 ? '−' : ''}${duree(Math.abs(ecart))}`, enJours(Math.abs(ecart), mpj), ecart > 0) : null),
     h('div', { class: 'segments segments-ecran', role: 'group' },
