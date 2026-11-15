@@ -540,6 +540,13 @@ body.feuille-ouverte { overflow: hidden; }
 }
 .bouton-secondaire:active { transform: scale(0.97); }
 .bouton-secondaire.actif { box-shadow: inset 0 0 0 2px var(--accent); font-weight: 600; }
+/* Nouveau créneau : choix en surbrillance, coche visible seulement sur la ligne choisie. */
+.liste-projets .ligne-bouton .coche { visibility: hidden; color: var(--accent); }
+.liste-projets .ligne-bouton.actuel { background: color-mix(in srgb, var(--accent) 12%, var(--carte)); }
+.liste-projets .ligne-bouton.actuel .ligne-titre { font-weight: 600; }
+.liste-projets .ligne-bouton.actuel .coche { visibility: visible; }
+/* « Enregistrer » reste visible en bas de la feuille, même avec une longue liste de projets. */
+.bouton-collant { position: sticky; bottom: 0; z-index: 1; box-shadow: 0 -10px 16px var(--feuille); }
 .feuille-attente {
   position: absolute;
   inset: 0;

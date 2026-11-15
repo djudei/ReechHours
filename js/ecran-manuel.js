@@ -1,5 +1,5 @@
 // Feuille « Nouveau créneau » : intitulé, début, fin, puis un appui sur le projet l'enregistre.
-import { h } from './dom.js';
+import { h, icone } from './dom.js';
 import { t } from './textes.js';
 import { titreJour, couleurChoix, libelleChoix } from './format.js';
 import { LONGUEUR_MAX_TITRE } from './manuels.js';
@@ -38,16 +38,37 @@ export function heuresParDefaut(date, aujourdhui, maintenant = new Date()) {
 
 /**
  * nouveau : { date, debut, fin, titre, enCours, erreur }
- * actions : { creer(choix, { titre, debut, fin }), fermer() }
+ * nouveau.choix : projet déjà choisi (après une erreur, pour le garder en surbrillance)
+ * actions : { creer(choix, { titre, debut, fin, choix }), fermer() }
  */
 export function feuilleNouveau(nouveau, projets, tousProjets, actions) {
   const titre = h('input', { id: 'manuel-titre', type: 'text', value: nouveau.titre, maxlength: LONGUEUR_MAX_TITRE,
     placeholder: t('manuel.intitule.exemple') });
   const debut = h('input', { id: 'manuel-debut', type: 'time', step: PAS_MINUTES * 60, value: nouveau.debut });
   const fin = h('input', { id: 'manuel-fin', type: 'time', step: PAS_MINUTES * 60, value: nouveau.fin });
-  const creer = (choix) => actions.creer(choix, { titre: titre.value, debut: debut.value, fin: fin.value });
+  // Un appui sur un projet (ou Pause, Congé, Ignoré) le met en surbrillance ; rien n'est enregistré
+  // avant « Enregistrer ». Un deuxième appui sur le même choix le retire.
+  let choix = nouveau.choix ?? null;
+  const lignes = new Map();
+  const speciaux = new Map();
+  const enregistrer = h('button', { class: 'bouton-principal bouton-large bouton-collant', disabled: nouveau.enCours,
+    onclick: () => actions.creer(choix ?? '', { titre: titre.value, debut: debut.value, fin: fin.value, choix: choix ?? '' }) });
+  const montrer = () => {
+    lignes.forEach((ligne, code) => {
+      const actif = code === choix;
+      ligne.classList.toggle('actuel', actif);
+      ligne.setAttribute('aria-pressed', String(actif));
+    });
+    speciaux.forEach((bouton, code) => {
+      bouton.classList.toggle('actif', code === choix);
+      bouton.setAttribute('aria-pressed', String(code === choix));
+    });
+    enregistrer.textContent = choix ? t('manuel.enregistrer') : t('manuel.sansProjet');
+  };
+  const choisir = (code) => () => { choix = choix === code ? null : code; montrer(); };
+  const coche = () => h('span', { class: 'ligne-duree coche', 'aria-hidden': 'true' }, icone('M5 12.5l4.5 4.5L19 7.5', 18, 2.6));
 
-  return h('div', { class: 'voile', onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
+  const contenu = h('div', { class: 'voile', onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
     h('section', { class: 'feuille', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'titre-nouveau', 'aria-busy': String(nouveau.enCours) },
       h('span', { class: 'poignee', 'aria-hidden': 'true' }),
       h('div', { class: 'feuille-barre' },
@@ -62,14 +83,23 @@ export function feuilleNouveau(nouveau, projets, tousProjets, actions) {
       nouveau.erreur ? h('p', { class: 'erreur feuille-erreur', role: 'alert' }, nouveau.erreur) : null,
       h('div', { class: 'entete-section' }, h('h3', {}, t('manuel.projet'))),
       h('ul', { class: 'carte liste liste-projets' },
-        projets.map((p) => h('li', {}, h('button', { class: 'ligne ligne-bouton', onclick: () => creer(p.code), disabled: nouveau.enCours },
-          h('span', { class: 'pastille', style: { background: couleurChoix(p.code, tousProjets) } }),
-          h('span', { class: 'ligne-texte' }, h('span', { class: 'ligne-titre' }, libelleChoix(p.code, tousProjets))))))),
+        projets.map((p) => {
+          const ligne = h('button', { class: 'ligne ligne-bouton', onclick: choisir(p.code), disabled: nouveau.enCours },
+            h('span', { class: 'pastille', style: { background: couleurChoix(p.code, tousProjets) } }),
+            h('span', { class: 'ligne-texte' }, h('span', { class: 'ligne-titre' }, libelleChoix(p.code, tousProjets))),
+            coche());
+          lignes.set(p.code, ligne);
+          return h('li', {}, ligne);
+        })),
       // Mêmes choix spéciaux que la fenêtre « Trier » : Pause, Congé, Ignoré.
       h('div', { class: 'choix-speciaux' },
-        [CODES.PAUSE, CODES.NON_TRAVAILLE, CODES.IGNORE].map((code) => h('button', {
-          class: 'bouton-secondaire', onclick: () => creer(code), disabled: nouveau.enCours
-        }, t(`tri.special.${code}`)))),
-      h('button', { class: 'bouton-secondaire', onclick: () => creer(''), disabled: nouveau.enCours }, t('manuel.sansProjet')),
+        [CODES.PAUSE, CODES.NON_TRAVAILLE, CODES.IGNORE].map((code) => {
+          const bouton = h('button', { class: 'bouton-secondaire', onclick: choisir(code), disabled: nouveau.enCours }, t(`tri.special.${code}`));
+          speciaux.set(code, bouton);
+          return bouton;
+        })),
+      enregistrer,
       nouveau.enCours ? h('div', { class: 'feuille-attente', 'aria-hidden': 'true' }, h('div', { class: 'roue' })) : null));
+  montrer();
+  return contenu;
 }

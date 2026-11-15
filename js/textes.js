@@ -94,11 +94,12 @@ const FR = {
 
   'manuel.titre': 'Nouveau créneau',
   'manuel.ajouter': 'Ajouter un créneau',
+  'manuel.enregistrer': 'Enregistrer',
   'manuel.intitule': 'Intitulé',
   'manuel.intitule.exemple': 'Ex. Rédaction du devis',
   'manuel.debut': 'Début',
   'manuel.fin': 'Fin',
-  'manuel.projet': 'Choisis son projet pour l\'enregistrer',
+  'manuel.projet': 'Projet',
   'manuel.sansProjet': 'Enregistrer sans projet',
   'manuel.ajoute': 'Créneau ajouté.',
   'manuel.titreParDefaut': 'Créneau manuel',
