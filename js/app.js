@@ -1,7 +1,7 @@
 // Démarrage et enchaînement des écrans : connexion → Sheet → Semaine (+ feuille Trier).
 import { CLIENT_ID } from './config.js';
 import { connecter, deconnecter } from './google.js';
-import { chargerSemaine, chargerRecap, exporterSheet, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
+import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
 import { idSheetDepuisLien } from './regles.js';
 import { lundiDe, ajouterJours, dateTexte, resumeSemaine } from './semaine.js';
 import { sourceDemo } from './demo.js';
@@ -158,7 +158,7 @@ async function chargerMoisRecap() {
 
 const actionsRecap = {
   changerMois: (decalage) => {
-    changer({ vueRecap: { ...etat.vueRecap, mois: decalerMois(etat.vueRecap.mois, decalage), export: null } });
+    changer({ vueRecap: { ...etat.vueRecap, mois: decalerMois(etat.vueRecap.mois, decalage), export: null, brouillon: null } });
     chargerMoisRecap();
   },
   afficher: (affichage) => { changer({ vueRecap: { ...etat.vueRecap, affichage } }); rendre(); },
@@ -171,6 +171,18 @@ const actionsRecap = {
       changerExport({ message, lien: estDemo ? '' : r.lien, erreur: '' });
     } catch (erreur) {
       changerExport({ erreur: t('erreur.ecriture', { detail: erreur.message }) });
+    }
+  },
+  brouillon: async () => {
+    const changerBrouillon = (valeur) => { changer({ vueRecap: { ...etat.vueRecap, brouillon: valeur } }); rendre(); };
+    changerBrouillon({ enCours: true });
+    try {
+      const r = await preparerBrouillon({ idSheet: lireIdSheet(), mois: etat.vueRecap.mois, aujourdhui, source });
+      const message = estDemo ? t('email.demo') : r.a ? t('email.fait', { sujet: r.sujet, a: r.a }) : t('email.faitSansDestinataire', { sujet: r.sujet });
+      const lien = estDemo ? '' : `https://mail.google.com/mail/#drafts${r.idMessage ? `?compose=${encodeURIComponent(r.idMessage)}` : ''}`;
+      changerBrouillon({ message, lien });
+    } catch (erreur) {
+      changerBrouillon({ erreur: t('email.erreur', { detail: erreur.message }) });
     }
   }
 };

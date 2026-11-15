@@ -63,7 +63,8 @@ function contenu(recap, donnees, vue, actions) {
     recap.projets.length === 0 ? h('p', { class: 'note' }, t('recap.vide'))
       : vue.affichage === 'projet' ? parProjet(recap, donnees) : global(recap, donnees),
     recap.aAttribuerMinutes ? h('p', { class: 'note signal' }, t('recap.aAttribuer', { duree: duree(recap.aAttribuerMinutes) })) : null,
-    piedExport(vue.export || {}, actions)
+    piedExport(vue.export || {}, actions),
+    piedBrouillon(vue.brouillon || {}, actions)
   ];
 }
 
@@ -123,4 +124,14 @@ function piedExport(etatExport, actions) {
     etatExport.message ? h('p', { class: 'note', role: 'status' }, etatExport.message) : null,
     etatExport.erreur ? h('p', { class: 'note erreur', role: 'alert' }, etatExport.erreur) : null,
     etatExport.lien ? h('a', { class: 'lien lien-centre', href: etatExport.lien, target: '_blank', rel: 'noopener' }, t('export.ouvrir')) : null);
+}
+
+// « Préparer le brouillon d'email » : le récap du mois + la charge à venir, dans les brouillons Gmail (jamais envoyé).
+function piedBrouillon(etat, actions) {
+  return h('div', { class: 'pied-recap' },
+    h('button', { class: 'bouton-secondaire bouton-large', onclick: actions.brouillon, disabled: etat.enCours },
+      etat.enCours ? t('email.encours') : t('email.bouton')),
+    etat.message ? h('p', { class: 'note', role: 'status' }, etat.message) : null,
+    etat.erreur ? h('p', { class: 'note erreur', role: 'alert' }, etat.erreur) : null,
+    etat.lien ? h('a', { class: 'lien lien-centre', href: etat.lien, target: '_blank', rel: 'noopener' }, t('email.ouvrir')) : null);
 }

@@ -5,10 +5,12 @@
 // dans Google Cloud (localhost pendant les essais, puis l'adresse du site) peuvent l'utiliser.
 export const CLIENT_ID = '176680700160-g687paf64f7klgtv49t29ncsvt27t1si.apps.googleusercontent.com';
 
-// Accès demandés à la personne, au minimum : lire son Agenda, lire et écrire dans ses Google Sheets.
+// Accès demandés à la personne, au minimum : lire son Agenda, lire et écrire dans ses Google Sheets,
+// préparer un brouillon Gmail du récap.
 export const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
-  'https://www.googleapis.com/auth/spreadsheets'
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/gmail.compose'   // créer des brouillons (jamais d'envoi par l'appli)
 ].join(' ');
 
 // Lien vers l'ancienne appli : volontairement vide dans ce dépôt public (adresse interne à l'agence).

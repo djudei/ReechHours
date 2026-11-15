@@ -11,6 +11,7 @@ import { construireRecap, dateLimitePour } from './recap.js';
 import { ONGLET_CHARGE, INTITULES_PAR_DEFAUT, lireIntitulesCharge, lireTableauCharge, zonesDuMois, zonesParDefaut, verifierZones, grilleCharge, moisSuivant } from './charge.js';
 import { nouveauClasseur, problemeStructure, EN_TETES } from './classeur.js';
 import { ONGLETS } from './schema.js';
+import { construireEmail, messageBrut } from './email.js';
 import { verifierReglages, planReglages } from './reglages-edition.js';
 import { ongletsAEcrire, requetesMiseEnForme, estOngletGenere } from './export-sheet.js';
 import { planAjoutManuel, planRenommage, planSuppression, verifierSansChevauchement } from './manuels.js';
@@ -39,6 +40,12 @@ export const sourceGoogle = {
     const reponse = await lireGoogle(urlSheet(idSheet, `values:batchGet?${parametres}`));
     const [reglages, projets, saisies] = (reponse.valueRanges || []).map((plage) => plage.values || []);
     return { reglages: interpreterReglages(reglages), projets: lireProjets(projets), saisies: lireSaisies(saisies) };
+  },
+
+  /** Brouillon Gmail (message déjà mis en forme) → { idMessage }. Rien n'est envoyé. */
+  async creerBrouillon(brut) {
+    const reponse = await ecrireGoogle('https://gmail.googleapis.com/gmail/v1/users/me/drafts', 'POST', { message: { raw: brut } });
+    return { idMessage: reponse.message?.id || '' };
   },
 
   /** Événements de l'Agenda principal entre deux dates (fin exclue), répétitions dépliées. */
@@ -341,6 +348,27 @@ async function lireCharge(idSheet, source) {
  * La charge d'un mois "2026-11" : { zones, enregistree, intitules, suivanteExiste }.
  * Mois sans charge : 3 zones vides (rien n'est écrit tant qu'on n'enregistre pas).
  */
+/**
+ * Brouillon d'email du récap du mois "2026-11" : temps du mois + charge du mois suivant (à défaut, celle du mois).
+ * Renvoie { a, sujet, idMessage } ; le message reste dans les brouillons Gmail, jamais envoyé.
+ */
+export async function preparerBrouillon({ idSheet, mois, aujourdhui, source = sourceGoogle }) {
+  const sheet = await source.lireSheet(idSheet);
+  const [annee, numero] = mois.split('-').map(Number);
+  const recap = construireRecap({
+    saisies: sheet.saisies, projets: sheet.projets, annee, mois: numero,
+    dateLimite: dateLimitePour(mois, aujourdhui), dateDebut: sheet.reglages.debutSuivi, temps: sheet.reglages.tempsDeTravail
+  });
+  const { intitules, tableau } = await lireCharge(idSheet, source);
+  const suivant = moisSuivant(mois);
+  const zonesSuivant = zonesDuMois(tableau, suivant, intitules);
+  const charge = zonesSuivant.length ? { mois: suivant, zones: zonesSuivant, aVenir: true }
+    : { mois, zones: zonesDuMois(tableau, mois, intitules), aVenir: false };
+  const email = construireEmail({ recap, reglages: sheet.reglages, charge });
+  const { idMessage } = await source.creerBrouillon(messageBrut(email));
+  return { a: email.a, sujet: email.sujet, idMessage };
+}
+
 export async function chargerCharge({ idSheet, mois, source = sourceGoogle }) {
   const { intitules, tableau } = await lireCharge(idSheet, source);
   const zones = zonesDuMois(tableau, mois, intitules);

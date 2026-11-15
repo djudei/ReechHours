@@ -48,6 +48,7 @@ export function sourceDemo() {
         saisies: lireSaisies(onglets[ONGLETS.SAISIES])
       };
     },
+    async creerBrouillon() { return { idMessage: '' }; },
     async lireEvenements(debut) {
       const jours = joursDeLaSemaine(debut);
       return AGENDA.map(([jour, de, a, titre]) => evenementDepuisApi({
