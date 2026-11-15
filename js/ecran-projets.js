@@ -56,7 +56,9 @@ export function ecranProjets(donnees, vue, actions) {
 }
 
 function enveloppe(titre, contenu, feuille, actions) {
-  return h('div', { class: 'voile', onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
+  // Nouveau projet : la feuille descend du haut de l'écran, pour rester visible au-dessus du clavier.
+  const depuisHaut = feuille.mode === 'nouveau';
+  return h('div', { class: `voile${depuisHaut ? ' depuis-haut' : ''}`, onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
     h('section', { class: 'feuille', role: 'dialog', 'aria-modal': 'true', 'aria-label': titre, 'aria-busy': String(feuille.enCours) },
       h('span', { class: 'poignee', 'aria-hidden': 'true' }),
       h('div', { class: 'feuille-barre' },

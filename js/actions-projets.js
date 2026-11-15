@@ -30,7 +30,7 @@ export function actionsProjets(appli) {
     nouveau: () => {
       changerVue({ feuille: { mode: 'nouveau', type: 'projet', nom: '', lettres: '', code: '', codeTouche: false, enCours: false, erreur: '' } });
       appli.rendre();
-      document.getElementById('projet-nom')?.focus({ preventScroll: true });
+      // Pas de focus automatique : le clavier ne s'ouvre qu'en touchant un champ.
     },
     choisirType: (type, champs) => {
       changerFeuille({ ...champs, type, code: champs.codeTouche ? champs.code : '' });

@@ -480,6 +480,16 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .feuille { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 body.feuille-ouverte { overflow: hidden; }
 @keyframes glisse { from { transform: translateY(40%); opacity: 0.4; } to { transform: none; opacity: 1; } }
+/* Feuille qui descend du haut (nouveau projet) : le clavier, en bas, ne la recouvre pas. */
+.voile.depuis-haut { align-items: flex-start; }
+.voile.depuis-haut .feuille {
+  border-radius: 0 0 14px 14px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 12px;
+  max-height: calc(100vh - 60px);
+  animation: descend 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.voile.depuis-haut .poignee { order: 99; }
+@keyframes descend { from { transform: translateY(-40%); opacity: 0.4; } to { transform: none; opacity: 1; } }
 .feuille .liste, .feuille .recherche, .feuille .bouton-secondaire { background: var(--carte-feuille); }
 .poignee { align-self: center; width: 36px; height: 5px; border-radius: 3px; background: var(--tertiaire); }
 .feuille-barre { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
