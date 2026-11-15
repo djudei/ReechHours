@@ -132,7 +132,7 @@ const FR = {
   'projets.lettres.exemple': 'Ex. ACME',
   'projets.nom': 'Nom',
   'projets.nom.exemple': 'Ex. Refonte du site',
-  'projets.numero.aide': 'Proposé automatiquement : 10XX pour les lignes internes, 20XX pour les projets clients. Tu peux le changer.',
+  'projets.numero.aide': 'Proposé automatiquement : 10XX pour les lignes internes, 2XXX pour les projets clients. Tu peux le changer.',
   'projets.creer': 'Créer le projet',
   'projets.cree': 'Projet {code} créé.',
   'projets.renommer': 'Renommer',
