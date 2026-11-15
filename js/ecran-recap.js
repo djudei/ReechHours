@@ -19,11 +19,11 @@ export function decalerMois(mois, decalage) {
 }
 
 /**
- * Minutes → « 8,9 j » (jours de travail d'après les heures par jour des Réglages).
+ * Minutes → « 8,93 j » : jours de travail, toujours 2 chiffres après la virgule (comme dans les docs projets).
  */
+const joursTexte = (minutes, minutesParJour) => (minutes / minutesParJour).toFixed(2).replace('.', ',');
 function enJours(minutes, minutesParJour) {
-  const jours = Math.round(minutes / minutesParJour * 10) / 10;
-  return t('recap.jours', { nombre: String(jours).replace('.', ',') });
+  return t('recap.jours', { nombre: joursTexte(minutes, minutesParJour) });
 }
 
 /**
@@ -112,7 +112,7 @@ function global(recap, donnees) {
       h('span', { class: 'legende-nom' }, h('span', { class: 'pastille', style: { background: COULEURS_CATEGORIES[c.type] } }), c.nom),
       h('span', { class: 'secondaire' }, `${enJours(minutes[c.type], recap.minutesParJour)} · ${Math.round(minutes[c.type] / total * 100)} %`))),
     h('p', { class: 'secondaire' }, t('recap.moyenne', { duree: duree(moyenne) })),
-    h('p', { class: 'secondaire' }, t('recap.conges', { jours: String(Math.round(recap.nonTravailleMinutes / recap.minutesParJour * 10) / 10).replace('.', ',') })));
+    h('p', { class: 'secondaire' }, t('recap.conges', { jours: joursTexte(recap.nonTravailleMinutes, recap.minutesParJour) })));
 }
 
 // « Mettre à jour mon Google Sheet » : bouton, attente, puis le résultat avec le lien vers le Sheet.
