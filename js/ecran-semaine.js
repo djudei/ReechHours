@@ -10,12 +10,13 @@ const EPAISSEUR_ANNEAU = 12;
 const HAUTEUR_COLONNE = 96;
 const CIRCONFERENCE = 2 * Math.PI * RAYON_ANNEAU;
 const HAUTEUR_HEURE = 52;
+const MARGE_HAUT_GRILLE = 8;   // les lignes d'heures commencent 8 px sous le haut de la carte
 const MARGE_HEURES = 46;
 const TRACE_TRIER = 'M4 5h16v14H4zM8 10h8M8 14h5';
 
 /**
  * etat : { donnees, lundi, jourChoisi, aujourdhui, aTrier (nombre de créneaux à attribuer) }
- * actions : { changerSemaine(decalage), choisirJour(date), recharger(), ouvrirCreneau(date, creneau), trier(), ajouterCreneau() }
+ * actions : { changerSemaine(decalage), choisirJour(date), recharger(), ouvrirCreneau(date, creneau), trier(), ajouterCreneau(date?, minutes?) }
  */
 export function ecranSemaine(etat, actions) {
   const { donnees, lundi, jourChoisi } = etat;
@@ -29,7 +30,7 @@ export function ecranSemaine(etat, actions) {
       h('span', { class: 'groupe-boutons' },
         h('button', { class: 'bouton-rond', onclick: actions.recharger, 'aria-label': t('semaine.recharger') },
           icone(TRACES.actualiser, 20, 2.2)),
-        h('button', { class: 'bouton-rond', onclick: actions.ajouterCreneau, 'aria-label': t('manuel.ajouter') },
+        h('button', { class: 'bouton-rond', onclick: () => actions.ajouterCreneau(), 'aria-label': t('manuel.ajouter') },
           icone(TRACES.ajouter, 20, 2.4))),
       h('button', { class: 'bouton-texte', onclick: () => actions.changerSemaine(1), 'aria-label': t('semaine.suivante') },
         t('semaine.courte', { numero: numeroSemaine(ajouterJours(lundi, 7)) }), icone(TRACES.suivant, 20, 2.4))),
@@ -109,7 +110,16 @@ function listeDuJour(donnees, jourChoisi, actions, aujourdhui) {
 
   return h('div', {}, entete,
     journee.length ? h('div', { class: 'journees' }, journee.map((c) => blocCreneau(c, donnees.projets, ouvrir(c), 'journee'))) : null,
-    h('div', { class: 'carte grille-jour', style: { height: `${(plage.fin - plage.debut) * HAUTEUR_HEURE + 16}px` } },
+    h('div', {
+      class: 'carte grille-jour',
+      style: { height: `${(plage.fin - plage.debut) * HAUTEUR_HEURE + 16}px` },
+      // Appui sur une zone vide : nouveau créneau à cette heure-là (un appui sur un créneau ouvre celui-ci).
+      onclick: (evenement) => {
+        if (evenement.target.closest('.bloc')) return;
+        const haut = evenement.currentTarget.getBoundingClientRect().top + MARGE_HAUT_GRILLE;
+        actions.ajouterCreneau(jour.date, Math.round((evenement.clientY - haut) / HAUTEUR_HEURE * 60 + plage.debut * 60));
+      }
+    },
       heures.map((heure) => h('div', { class: 'grille-heure', style: { top: position(heure * 60) } },
         h('span', {}, `${heure}:00`))),
       afficherMaintenant ? h('div', { class: 'grille-maintenant', style: { top: position(minutesMaintenant) }, 'aria-hidden': 'true' }) : null,

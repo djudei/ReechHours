@@ -12,6 +12,18 @@ const MINUTES_DANS_JOURNEE = 24 * 60;
 const enHeure = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
 /**
+ * Appui sur une zone vide de la grille, à `minutes` depuis minuit : le créneau commence au quart d'heure touché
+ * (arrondi en dessous) et dure 1 h, sans dépasser minuit.
+ */
+export function heuresDepuisAppui(minutes) {
+  const dernier = MINUTES_DANS_JOURNEE - 2 * PAS_MINUTES;   // 23:30 au plus tard
+  const debut = Math.max(0, Math.min(Math.floor(minutes / PAS_MINUTES) * PAS_MINUTES, dernier));
+  // Le champ heure de l'iPhone n'affiche pas « 24:00 » : fin à 23:45 au plus tard.
+  const fin = Math.min(debut + DUREE_PAR_DEFAUT, MINUTES_DANS_JOURNEE - PAS_MINUTES);
+  return { debut: enHeure(debut), fin: enHeure(fin) };
+}
+
+/**
  * Heures proposées : aujourd'hui, le quart d'heure qui vient ; un autre jour, 9 h. Durée 1 h.
  */
 export function heuresParDefaut(date, aujourdhui, maintenant = new Date()) {

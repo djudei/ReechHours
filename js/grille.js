@@ -1,7 +1,7 @@
 // Grille horaire d'un jour, comme Google Agenda : position de chaque créneau, et créneaux qui se chevauchent
 // placés côte à côte (chaque groupe qui se chevauche se partage la largeur). Calcul pur.
 
-const PLAGE_PAR_DEFAUT = { debut: 8, fin: 19 };
+const PLAGE_PAR_DEFAUT = { debut: 7, fin: 24 };   // 7h–minuit, comme Timesheets+
 const MINUTES_PAR_HEURE = 60;
 
 const enMinutes = (heure) => {

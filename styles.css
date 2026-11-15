@@ -255,7 +255,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .pastille.creuse { border: 2px solid var(--signal); }
 
 /* ---------- Grille horaire du jour (comme un agenda) ---------- */
-.grille-jour { position: relative; border-radius: var(--rayon-carte); margin-top: 0; overflow: hidden; }
+.grille-jour { position: relative; border-radius: var(--rayon-carte); margin-top: 0; overflow: hidden; cursor: pointer; }
 .grille-heure {
   position: absolute;
   left: 0;

@@ -5,9 +5,10 @@ import { dispositionJour } from '../js/grille.js';
 
 const c = (id, debut, fin) => ({ id, debut, fin, minutes: 0, journeeEntiere: false });
 
-test('plage affichée : 8 h – 19 h par défaut, élargie aux créneaux plus tôt ou plus tard', () => {
-  assert.deepEqual(dispositionJour([]).plage, { debut: 8, fin: 19 });
-  assert.deepEqual(dispositionJour([c('a', '07:30', '08:00'), c('b', '20:00', '21:15')]).plage, { debut: 7, fin: 22 });
+test('plage affichée : 7 h – minuit, comme Timesheets+ ; élargie aux créneaux plus tôt', () => {
+  assert.deepEqual(dispositionJour([]).plage, { debut: 7, fin: 24 });
+  assert.deepEqual(dispositionJour([c('a', '07:30', '08:00'), c('b', '20:00', '21:15')]).plage, { debut: 7, fin: 24 });
+  assert.deepEqual(dispositionJour([c('a', '06:15', '07:00')]).plage, { debut: 6, fin: 24 });
 });
 
 test('créneaux séparés : une colonne chacun ; chevauchement : côte à côte', () => {

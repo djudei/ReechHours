@@ -7,7 +7,7 @@ import { lundiDe, ajouterJours, dateTexte, resumeSemaine } from './semaine.js';
 import { sourceDemo } from './demo.js';
 import { ecranSemaine } from './ecran-semaine.js';
 import { feuilleTri, projetsPourTri } from './ecran-tri.js';
-import { feuilleNouveau, heuresParDefaut } from './ecran-manuel.js';
+import { feuilleNouveau, heuresParDefaut, heuresDepuisAppui } from './ecran-manuel.js';
 import { ecranProjets } from './ecran-projets.js';
 import { ecranRecap, decalerMois } from './ecran-recap.js';
 import { actionsProjets } from './actions-projets.js';
@@ -311,11 +311,11 @@ async function executerSurCreneau(action) {
 
 // ---------- Nouveau créneau ----------
 
-function ouvrirNouveau() {
-  const date = etat.jourChoisi;
-  changer({ nouveau: { date, titre: '', ...heuresParDefaut(date, aujourdhui), enCours: false, erreur: '' } });
+function ouvrirNouveau(date = etat.jourChoisi, minutes = null) {
+  const heures = minutes === null ? heuresParDefaut(date, aujourdhui) : heuresDepuisAppui(minutes);
+  changer({ nouveau: { date, titre: '', ...heures, enCours: false, erreur: '' } });
   rendre();
-  document.getElementById('manuel-titre')?.focus({ preventScroll: true });
+  // Pas de focus automatique : le clavier ne s'ouvre qu'en touchant un champ.
 }
 
 function fermerNouveau() {
