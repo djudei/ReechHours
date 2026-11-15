@@ -540,6 +540,7 @@ body.feuille-ouverte { overflow: hidden; }
 }
 .bouton-secondaire:active { transform: scale(0.97); }
 .bouton-secondaire.actif { box-shadow: inset 0 0 0 2px var(--accent); font-weight: 600; }
+.bouton-proposition.actif { box-shadow: 0 0 0 3px var(--feuille), 0 0 0 5px var(--accent); }
 /* Nouveau créneau : choix en surbrillance, coche visible seulement sur la ligne choisie. */
 .liste-projets .ligne-bouton .coche { visibility: hidden; color: var(--accent); }
 .liste-projets .ligne-bouton.actuel { background: color-mix(in srgb, var(--accent) 12%, var(--carte)); }

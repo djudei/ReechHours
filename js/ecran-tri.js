@@ -14,21 +14,38 @@ const TRACE_LOUPE = 'M11 4.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM20 20l-4.2-4
  * tri : { file: [{ date, creneau }], position, enCours, erreur }
  * projets : projets actifs, les plus utilisés de la semaine d'abord.
  * tri.mode : '' | 'renommer' | 'supprimer' (créneau ajouté à la main : renommer, ou suppression à confirmer)
- * actions : { choisir(choix), passer(), fermer(), renommer(titre?), supprimer() }
+ * actions : { choisir(choix) (appelé par « Valider »), passer(), fermer(), renommer(titre?), supprimer() }
  */
 export function feuilleTri(tri, projets, tousProjets, actions) {
   const { date, creneau } = tri.file[tri.position];
   const quand = creneau.journeeEntiere ? t('creneau.journee') : `${creneau.debut} – ${creneau.fin}`;
   const proposition = creneau.proposition && creneau.proposition !== creneau.choix ? creneau.proposition : '';
+  // Un appui sur un projet (ou Pause, Congé, Ignoré) le met en surbrillance ; « Valider » l'enregistre.
+  // Au départ : le choix actuel du créneau, sinon rien.
+  // Le choix en cours est gardé dans `tri` : un nouvel affichage de la fenêtre ne le perd pas.
+  if (tri.selection?.position !== tri.position) tri.selection = { position: tri.position, code: creneau.choix || null };
+  let selection = tri.selection.code;
+  const boutons = [];   // [{ code, bouton, classe }]
+  const valider = h('button', { class: 'bouton-principal bouton-large bouton-collant', disabled: true,
+    onclick: () => { if (selection) actions.choisir(selection); } }, t('tri.valider'));
+  const montrer = () => {
+    boutons.forEach(({ code, bouton, classe }) => {
+      bouton.classList.toggle(classe, code === selection);
+      bouton.setAttribute('aria-pressed', String(code === selection));
+    });
+    valider.disabled = tri.enCours || !selection;
+  };
+  const choisir = (code) => () => { selection = selection === code ? null : code; tri.selection.code = selection; montrer(); };
+  const retenir = (code, bouton, classe) => { boutons.push({ code, bouton, classe }); return bouton; };
   const liste = h('ul', { class: 'carte liste liste-projets' },
     projets.map((p) => h('li', { 'data-recherche': normaliser(`${p.code} ${p.nom}`) },
-      boutonChoix(p.code, tousProjets, creneau.choix, actions, tri.enCours))));
+      retenir(p.code, boutonChoix(p.code, tousProjets, choisir(p.code), tri.enCours), 'actuel'))));
   const filtrer = (evenement) => {
     const cherche = normaliser(evenement.target.value);
     liste.querySelectorAll('li').forEach((li) => { li.hidden = Boolean(cherche) && !li.dataset.recherche.includes(cherche); });
   };
 
-  return h('div', { class: 'voile', onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
+  const feuille = h('div', { class: 'voile', onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
     h('section', { class: 'feuille', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'titre-tri', 'aria-busy': String(tri.enCours) },
       h('span', { class: 'poignee', 'aria-hidden': 'true' }),
       h('div', { class: 'feuille-barre' },
@@ -45,22 +62,25 @@ export function feuilleTri(tri, projets, tousProjets, actions) {
         creneau.choix ? h('span', { class: 'secondaire' }, t('tri.actuel', { choix: libelleChoix(creneau.choix, tousProjets) })) : null),
       creneau.manuel ? blocManuel(tri, creneau, actions) : null,
       tri.erreur ? h('p', { class: 'erreur feuille-erreur', role: 'alert' }, tri.erreur) : null,
-      proposition ? h('button', { class: 'bouton-proposition', onclick: () => actions.choisir(proposition), disabled: tri.enCours },
+      proposition ? retenir(proposition, h('button', { class: 'bouton-proposition', onclick: choisir(proposition), disabled: tri.enCours },
         h('span', { class: 'pastille pastille-claire' }),
         h('span', { class: 'ligne-texte' },
           h('span', { class: 'ligne-titre' }, libelleChoix(proposition, tousProjets)),
           h('span', { class: 'proposition-note' }, t('tri.propose'))),
-        icone(TRACE_COCHE, 22, 2.6)) : null,
+        icone(TRACE_COCHE, 22, 2.6)), 'actif') : null,
       h('label', { class: 'recherche' },
         icone(TRACE_LOUPE, 18, 2.2),
         h('input', { type: 'search', 'aria-label': t('tri.chercher'), placeholder: t('tri.chercher'), oninput: filtrer })),
       h('div', { class: 'entete-section' }, h('h3', {}, t('tri.projets'))),
       liste,
       h('div', { class: 'choix-speciaux' },
-        [CODES.PAUSE, CODES.NON_TRAVAILLE, CODES.IGNORE].map((code) => h('button', {
-          class: `bouton-secondaire${creneau.choix === code ? ' actif' : ''}`, onclick: () => actions.choisir(code), disabled: tri.enCours
-        }, t(`tri.special.${code}`)))),
+        [CODES.PAUSE, CODES.NON_TRAVAILLE, CODES.IGNORE].map((code) => retenir(code, h('button', {
+          class: 'bouton-secondaire', onclick: choisir(code), disabled: tri.enCours
+        }, t(`tri.special.${code}`)), 'actif'))),
+      valider,
       tri.enCours ? h('div', { class: 'feuille-attente', 'aria-hidden': 'true' }, h('div', { class: 'roue' })) : null));
+  montrer();
+  return feuille;
 }
 
 // Créneau ajouté à la main : le renommer, ou le supprimer (deuxième appui pour confirmer).
@@ -80,11 +100,11 @@ function blocManuel(tri, creneau, actions) {
       confirmer ? t('manuel.supprimer.confirmer') : t('manuel.supprimer')));
 }
 
-function boutonChoix(code, tousProjets, choixActuel, actions, enCours) {
-  return h('button', { class: `ligne ligne-bouton${code === choixActuel ? ' actuel' : ''}`, onclick: () => actions.choisir(code), disabled: enCours },
+function boutonChoix(code, tousProjets, onclick, enCours) {
+  return h('button', { class: 'ligne ligne-bouton', onclick, disabled: enCours },
     h('span', { class: 'pastille', style: { background: couleurChoix(code, tousProjets) } }),
     h('span', { class: 'ligne-texte' }, h('span', { class: 'ligne-titre' }, libelleChoix(code, tousProjets))),
-    code === choixActuel ? h('span', { class: 'ligne-duree' }, icone(TRACE_COCHE, 18, 2.6)) : null);
+    h('span', { class: 'ligne-duree coche', 'aria-hidden': 'true' }, icone(TRACE_COCHE, 18, 2.6)));
 }
 
 /**

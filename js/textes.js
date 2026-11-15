@@ -50,6 +50,7 @@ const FR = {
   'tri.bouton': 'Trier {nombre} créneau',
   'tri.bouton.pluriel': 'Trier {nombre} créneaux',
   'tri.fermer': 'Fermer',
+  'tri.valider': 'Valider',
   'tri.passer': 'Passer',
   'tri.compteur': '{rang} sur {total}',
   'tri.depuisAgenda': 'Google Agenda',

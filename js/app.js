@@ -90,7 +90,12 @@ function choisirOnglet(onglet) {
 function montrerMessage(message) {
   changer({ message });
   rendre();
-  setTimeout(() => { if (etat.message === message) { changer({ message: '' }); rendre(); } }, DUREE_MESSAGE_MS);
+  // À la fin, on retire juste la bulle : pas de nouvel affichage, qui viderait une fenêtre ouverte (choix, recherche, saisie).
+  setTimeout(() => {
+    if (etat.message !== message) return;
+    changer({ message: '' });
+    document.querySelector('.message')?.remove();
+  }, DUREE_MESSAGE_MS);
 }
 
 // ---------- Semaine ----------

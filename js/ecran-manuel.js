@@ -46,6 +46,8 @@ export function feuilleNouveau(nouveau, projets, tousProjets, actions) {
     placeholder: t('manuel.intitule.exemple') });
   const debut = h('input', { id: 'manuel-debut', type: 'time', step: PAS_MINUTES * 60, value: nouveau.debut });
   const fin = h('input', { id: 'manuel-fin', type: 'time', step: PAS_MINUTES * 60, value: nouveau.fin });
+  // Ce qui est tapé est gardé dans `nouveau` : un nouvel affichage de la fenêtre ne l'efface pas.
+  [[titre, 'titre'], [debut, 'debut'], [fin, 'fin']].forEach(([champ, cle]) => champ.addEventListener('input', () => { nouveau[cle] = champ.value; }));
   // Un appui sur un projet (ou Pause, Congé, Ignoré) le met en surbrillance ; rien n'est enregistré
   // avant « Enregistrer ». Un deuxième appui sur le même choix le retire.
   let choix = nouveau.choix ?? null;
@@ -65,7 +67,7 @@ export function feuilleNouveau(nouveau, projets, tousProjets, actions) {
     });
     enregistrer.textContent = choix ? t('manuel.enregistrer') : t('manuel.sansProjet');
   };
-  const choisir = (code) => () => { choix = choix === code ? null : code; montrer(); };
+  const choisir = (code) => () => { choix = choix === code ? null : code; nouveau.choix = choix; montrer(); };
   const coche = () => h('span', { class: 'ligne-duree coche', 'aria-hidden': 'true' }, icone('M5 12.5l4.5 4.5L19 7.5', 18, 2.6));
 
   const contenu = h('div', { class: 'voile', onclick: (e) => { if (e.target === e.currentTarget) actions.fermer(); } },
