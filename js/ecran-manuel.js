@@ -3,6 +3,7 @@ import { h } from './dom.js';
 import { t } from './textes.js';
 import { titreJour, couleurChoix, libelleChoix } from './format.js';
 import { LONGUEUR_MAX_TITRE } from './manuels.js';
+import { CODES } from './regles.js';
 
 const PAS_MINUTES = 15;
 const DUREE_PAR_DEFAUT = 60;
@@ -64,6 +65,11 @@ export function feuilleNouveau(nouveau, projets, tousProjets, actions) {
         projets.map((p) => h('li', {}, h('button', { class: 'ligne ligne-bouton', onclick: () => creer(p.code), disabled: nouveau.enCours },
           h('span', { class: 'pastille', style: { background: couleurChoix(p.code, tousProjets) } }),
           h('span', { class: 'ligne-texte' }, h('span', { class: 'ligne-titre' }, libelleChoix(p.code, tousProjets))))))),
+      // Mêmes choix spéciaux que la fenêtre « Trier » : Pause, Congé, Ignoré.
+      h('div', { class: 'choix-speciaux' },
+        [CODES.PAUSE, CODES.NON_TRAVAILLE, CODES.IGNORE].map((code) => h('button', {
+          class: 'bouton-secondaire', onclick: () => creer(code), disabled: nouveau.enCours
+        }, t(`tri.special.${code}`)))),
       h('button', { class: 'bouton-secondaire', onclick: () => creer(''), disabled: nouveau.enCours }, t('manuel.sansProjet')),
       nouveau.enCours ? h('div', { class: 'feuille-attente', 'aria-hidden': 'true' }, h('div', { class: 'roue' })) : null));
 }
