@@ -47,7 +47,8 @@ export function verifierReglages(saisie) {
   // ne fait que changer ce qui compte (les créneaux plus anciens restent dans le Sheet).
   const debutSuivi = lireDateSuivi(saisie.debutSuivi);
   if (!debutSuivi) throw new Error(t('reglages.erreur.debut'));
-  return { nomDocs, initiales, posteDocs, emailDestinataire, prenomDestinataire, debutSuivi };
+  return { nomDocs, initiales, posteDocs, emailDestinataire, prenomDestinataire, debutSuivi,
+    ecritureDocsReels: saisie.ecritureDocsReels ? 'oui' : 'non' };
 }
 
 /**
@@ -61,7 +62,8 @@ export function planReglages(lignes, propres) {
     [REGLAGES.posteDocs, propres.posteDocs],
     [REGLAGES.prenomDestinataire, propres.prenomDestinataire],
     [REGLAGES.emailDestinataire, propres.emailDestinataire],
-    [REGLAGES.debutSuivi, propres.debutSuivi]
+    [REGLAGES.debutSuivi, propres.debutSuivi],
+    [REGLAGES.ecritureDocsReels, propres.ecritureDocsReels]
   ];
   const ligneDe = new Map();
   lignes.forEach((ligne, i) => {

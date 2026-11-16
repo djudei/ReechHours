@@ -9,7 +9,7 @@ Construite à partir de [Hours](https://github.com/djudei/Hours).
 - **Agenda** : ta semaine en grille horaire. Touche une réunion pour l'attribuer à un projet, la marquer en Non travaillé, Pause ou Ignoré. Les titres `CLIENT | sujet` sont attribués automatiquement quand il n'y a aucun doute.
 - **Charge** : tes missions du mois, par zones (AO & Reco, Projets en cours, Projets à venir, Projets en clôture, Développement commercial).
 - **Projets** : numéros de l'agence (10XX lignes internes, 2XXX projets clients).
-- **Récap** : temps travaillé, base 35h, au-delà ; mise à jour des onglets du mois et du récap annuel dans ton Sheet.
+- **Récap** : temps travaillé, base 35h, au-delà ; mise à jour des onglets du mois et du récap annuel dans ton Sheet ; brouillon d'email du récap (jamais envoyé) ; mise à jour des docs projets (onglet TIMESHEET), simulation d'abord.
 
 **Règle d'or : dans le doute, on n'écrit pas, on signale.**
 

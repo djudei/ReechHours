@@ -1,12 +1,13 @@
 // Démarrage et enchaînement des écrans : connexion → Sheet → Semaine (+ feuille Trier).
 import { CLIENT_ID } from './config.js';
 import { connecter, deconnecter } from './google.js';
-import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
+import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, simulerDocs, ecrireDocs, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
 import { idSheetDepuisLien } from './regles.js';
 import { lundiDe, ajouterJours, dateTexte, resumeSemaine } from './semaine.js';
 import { sourceDemo } from './demo.js';
 import { ecranSemaine } from './ecran-semaine.js';
 import { feuilleTri, projetsPourTri } from './ecran-tri.js';
+import { feuilleDocs } from './ecran-docs.js';
 import { feuilleNouveau, heuresParDefaut, heuresDepuisAppui } from './ecran-manuel.js';
 import { ecranProjets } from './ecran-projets.js';
 import { ecranRecap, decalerMois } from './ecran-recap.js';
@@ -59,7 +60,8 @@ let dernierEcran = '';
 
 function afficher(...contenu) {
   document.body.classList.toggle('feuille-ouverte', Boolean(etat.tri || etat.nouveau
-    || (etat.onglet === 'projets' && etat.vueProjets.feuille) || (etat.onglet === 'charge' && etat.vueCharge.feuille)));
+    || (etat.onglet === 'projets' && etat.vueProjets.feuille) || (etat.onglet === 'charge' && etat.vueCharge.feuille)
+    || (etat.onglet === 'recap' && etat.vueRecap.docs)));
   const feuillePrecedente = racine.querySelector('.feuille');
   const defilementFeuille = feuillePrecedente ? feuillePrecedente.scrollTop : 0;
   const ecran = etat.donnees ? etat.onglet : 'accueil';
@@ -110,7 +112,10 @@ function rendre() {
   if (etat.onglet === 'projets') return afficher(ecranProjets(etat.donnees, etat.vueProjets, actionsEcranProjets));
   if (etat.onglet === 'reglages') return afficher(ecranReglages(etat.donnees.reglages, etat.vueReglages, actionsReglages, { demo: estDemo }));
   if (etat.onglet === 'charge') return afficher(ecranCharge(etat.vueCharge, actionsEcranCharge));
-  if (etat.onglet === 'recap') return afficher(ecranRecap(etat.donnees, etat.vueRecap, actionsRecap));
+  if (etat.onglet === 'recap') {
+    return afficher(ecranRecap(etat.donnees, etat.vueRecap, actionsRecap),
+      etat.vueRecap.docs ? feuilleDocs(etat.vueRecap.docs, actionsDocs) : null);
+  }
   if (etat.onglet !== 'agenda') return afficher(ecranBientot(etat.onglet));
   const semaine = ecranSemaine({ ...etat, aujourdhui, aTrier: aTrier().length }, {
     changerSemaine: (decalage) => {
@@ -157,6 +162,7 @@ async function chargerMoisRecap() {
 }
 
 const actionsRecap = {
+  docs: () => actionsDocs.ouvrir(),
   changerMois: (decalage) => {
     changer({ vueRecap: { ...etat.vueRecap, mois: decalerMois(etat.vueRecap.mois, decalage), export: null, brouillon: null } });
     chargerMoisRecap();
@@ -185,6 +191,41 @@ const actionsRecap = {
       changerBrouillon({ erreur: t('email.erreur', { detail: erreur.message }) });
     }
   }
+};
+
+// ---------- Docs projets (onglet TIMESHEET) ----------
+
+const changerDocs = (valeur) => {
+  changer({ vueRecap: { ...etat.vueRecap, docs: valeur ? { ...(etat.vueRecap.docs || {}), ...valeur } : null } });
+  rendre();
+};
+const actionsDocs = {
+  // Ouverture = simulation : on lit les docs, rien n'est écrit.
+  ouvrir: async () => {
+    changer({ vueRecap: { ...etat.vueRecap, docs: { enCours: true, simulation: null, remplacer: [], ecrit: false, erreur: '' } } });
+    rendre();
+    try {
+      const simulation = await simulerDocs({ idSheet: lireIdSheet(), mois: etat.vueRecap.mois, aujourdhui, source });
+      changerDocs({ enCours: false, simulation });
+    } catch (erreur) {
+      changerDocs({ enCours: false, erreur: t('docs.erreur', { detail: erreur.message }) });
+    }
+  },
+  basculer: (code) => {
+    const remplacer = new Set(etat.vueRecap.docs.remplacer);
+    if (remplacer.has(code)) remplacer.delete(code); else remplacer.add(code);
+    changerDocs({ remplacer: [...remplacer] });
+  },
+  ecrire: async () => {
+    changerDocs({ enCours: true, erreur: '' });
+    try {
+      const simulation = await ecrireDocs({ idSheet: lireIdSheet(), mois: etat.vueRecap.mois, aujourdhui, remplacer: etat.vueRecap.docs.remplacer, source });
+      changerDocs({ enCours: false, simulation, ecrit: true });
+    } catch (erreur) {
+      changerDocs({ enCours: false, erreur: t('docs.erreur', { detail: erreur.message }) });
+    }
+  },
+  fermer: () => changerDocs(null)
 };
 
 // ---------- Réglages ----------

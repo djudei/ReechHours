@@ -12,6 +12,8 @@ import { ONGLET_CHARGE, INTITULES_PAR_DEFAUT, lireIntitulesCharge, lireTableauCh
 import { nouveauClasseur, problemeStructure, EN_TETES } from './classeur.js';
 import { ONGLETS } from './schema.js';
 import { construireEmail, messageBrut } from './email.js';
+import { NOM_ONGLET_TIMESHEET, STATUTS, idDepuisLien, trimestreDe, planDoc, ecritureAutorisee } from './docs-projets.js';
+import { normaliser } from './regles.js';
 import { verifierReglages, planReglages } from './reglages-edition.js';
 import { ongletsAEcrire, requetesMiseEnForme, estOngletGenere } from './export-sheet.js';
 import { planAjoutManuel, planRenommage, planSuppression, verifierSansChevauchement } from './manuels.js';
@@ -367,6 +369,87 @@ export async function preparerBrouillon({ idSheet, mois, aujourdhui, source = so
   const email = construireEmail({ recap, reglages: sheet.reglages, charge });
   const { idMessage } = await source.creerBrouillon(messageBrut(email));
   return { a: email.a, sujet: email.sujet, idMessage };
+}
+
+// ---------- Docs projets (onglet TIMESHEET) ----------
+
+/**
+ * Minutes par projet sur le trimestre civil du mois affiché (jusqu'à aujourd'hui, depuis le Début du suivi).
+ */
+function minutesDuTrimestre(sheet, mois, aujourdhui) {
+  const total = {};
+  trimestreDe(mois).mois.filter((m) => m <= aujourdhui.slice(0, 7)).forEach((m) => {
+    const [annee, numero] = m.split('-').map(Number);
+    construireRecap({
+      saisies: sheet.saisies, projets: sheet.projets, annee, mois: numero,
+      dateLimite: dateLimitePour(m, aujourdhui), dateDebut: sheet.reglages.debutSuivi, temps: sheet.reglages.tempsDeTravail
+    }).projets.forEach((p) => { total[p.code] = (total[p.code] || 0) + p.minutes; });
+  });
+  return total;
+}
+
+/** Un doc projet : son titre et les valeurs de son onglet TIMESHEET (retrouvé sans tenir compte de la casse ni des accents). */
+async function lireDoc(idDoc, source) {
+  const structure = await source.lireStructure(idDoc);
+  const onglet = structure.onglets.find((o) => normaliser(o.titre) === normaliser(NOM_ONGLET_TIMESHEET));
+  if (!onglet) return { titre: structure.titre, onglet: '', grille: [] };
+  const [grille] = await source.lireValeurs(idDoc, [`'${onglet.titre.replace(/'/g, "''")}'!A1:ZZ600`]);
+  return { titre: structure.titre, onglet: onglet.titre, grille: grille || [] };
+}
+
+/**
+ * Simulation : pour chaque projet actif qui a un lien de doc et du temps ce trimestre, ce qui serait écrit.
+ * Rien n'est écrit. → { trimestre, ecritureDocsReels, lignes: [{ code, nom, lien, titreDoc, jours, statut, raison?, ligne?, colonne?, valeurDoc?, valeur, renommer?, modifications, onglet }] }
+ */
+export async function simulerDocs({ idSheet, mois, aujourdhui, source = sourceGoogle }) {
+  const sheet = await source.lireSheet(idSheet);
+  const { reglages } = sheet;
+  const trimestre = trimestreDe(mois).nom;
+  const minutes = minutesDuTrimestre(sheet, mois, aujourdhui);
+  const personne = {
+    nomDocs: reglages.nomDocs, posteDocs: reglages.posteDocs,
+    postes: String(reglages.postesTexte || '').split(';').map((x) => x.trim()).filter(Boolean)
+  };
+  const projets = sheet.projets.filter((p) => p.statut === 'actif' && p.lienDoc && minutes[p.code]);
+  const lignes = [];
+  for (const p of projets) {
+    const jours = minutes[p.code] / reglages.tempsDeTravail.minutesParJour;
+    const base = { code: p.code, nom: p.nom, lien: p.lienDoc, jours, valeur: Math.round(jours * 100) / 100, modifications: [] };
+    const idDoc = idDepuisLien(p.lienDoc);
+    if (!idDoc) { lignes.push({ ...base, statut: STATUTS.ANOMALIE, raison: 'lien' }); continue; }
+    try {
+      const doc = await lireDoc(idDoc, source);
+      const avecDoc = { ...base, idDoc, titreDoc: doc.titre, onglet: doc.onglet };
+      if (!doc.onglet) { lignes.push({ ...avecDoc, statut: STATUTS.ANOMALIE, raison: 'onglet' }); continue; }
+      if (!ecritureAutorisee(doc.titre, reglages.ecritureDocsReels)) { lignes.push({ ...avecDoc, statut: STATUTS.IGNORE, raison: 'interrupteur' }); continue; }
+      lignes.push({ ...avecDoc, ...planDoc({ grille: doc.grille, personne, trimestre, jours }) });
+    } catch (erreur) {
+      lignes.push({ ...base, idDoc, statut: STATUTS.ANOMALIE, raison: 'acces', detail: erreur.message });
+    }
+  }
+  return { trimestre, ecritureDocsReels: reglages.ecritureDocsReels, lignes };
+}
+
+/**
+ * Écriture : refait la simulation (les docs ont pu changer), puis écrit les lignes « à écrire »
+ * et les conflits que la personne a choisi de remplacer (`remplacer` : liste de codes). Rien d'autre.
+ * → la simulation, chaque ligne écrite passée au statut « ecrit ».
+ */
+export async function ecrireDocs({ idSheet, mois, aujourdhui, remplacer = [], source = sourceGoogle }) {
+  const simulation = await simulerDocs({ idSheet, mois, aujourdhui, source });
+  for (const ligne of simulation.lignes) {
+    const aEcrire = ligne.statut === STATUTS.ECRIRE || (ligne.statut === STATUTS.CONFLIT && remplacer.includes(ligne.code));
+    if (!aEcrire) continue;
+    try {
+      const prefixe = `'${ligne.onglet.replace(/'/g, "''")}'!`;
+      await source.modifierPlages(ligne.idDoc, ligne.modifications.map((m) => ({ plage: prefixe + m.plage, valeurs: m.valeurs })));
+      ligne.statutAvant = ligne.statut;
+      ligne.statut = 'ecrit';
+    } catch (erreur) {
+      Object.assign(ligne, { statut: STATUTS.ANOMALIE, raison: 'ecriture', detail: erreur.message });
+    }
+  }
+  return simulation;
 }
 
 export async function chargerCharge({ idSheet, mois, source = sourceGoogle }) {

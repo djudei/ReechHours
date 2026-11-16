@@ -64,7 +64,10 @@ function contenu(recap, donnees, vue, actions) {
       : vue.affichage === 'projet' ? parProjet(recap, donnees) : global(recap, donnees),
     recap.aAttribuerMinutes ? h('p', { class: 'note signal' }, t('recap.aAttribuer', { duree: duree(recap.aAttribuerMinutes) })) : null,
     piedExport(vue.export || {}, actions),
-    piedBrouillon(vue.brouillon || {}, actions)
+    piedBrouillon(vue.brouillon || {}, actions),
+    h('div', { class: 'pied-recap' },
+      h('button', { class: 'bouton-secondaire bouton-large', onclick: actions.docs }, t('docs.ouvrir')),
+      h('p', { class: 'note' }, t('docs.ouvrir.aide')))
   ];
 }
 

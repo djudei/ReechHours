@@ -14,7 +14,7 @@ test('initiales proposées : « Camille D » → CD, « Benjamin LS » → BLS, 
 
 test('vérification : valeurs nettoyées ; nom vide, initiales ou email illisibles → erreur', () => {
   const p = verifierReglages(saisie);
-  assert.deepEqual(p, { nomDocs: 'Camille D', initiales: 'CD', posteDocs: 'Chef de projet', prenomDestinataire: 'Alix', emailDestinataire: 'alix@exemple.fr', debutSuivi: '2026-10-01' });
+  assert.deepEqual(p, { nomDocs: 'Camille D', initiales: 'CD', posteDocs: 'Chef de projet', prenomDestinataire: 'Alix', emailDestinataire: 'alix@exemple.fr', debutSuivi: '2026-10-01', ecritureDocsReels: 'non' });
   assert.throws(() => verifierReglages({ ...saisie, debutSuivi: '' }));
   assert.throws(() => verifierReglages({ ...saisie, debutSuivi: '2026-02-30' }));
   assert.equal(verifierReglages({ ...saisie, initiales: 'cdx' }).initiales, 'CDX');
@@ -30,9 +30,11 @@ test('onglet Réglages : chaque valeur sur la ligne de son étiquette, ancienne 
   assert.deepEqual(plan.modifications, [
     { plage: "'Réglages'!B4", valeurs: [['Camille D']] },
     { plage: "'Réglages'!B5", valeurs: [['CD']] },
-    { plage: "'Réglages'!B2", valeurs: [['alix@exemple.fr']] }
+    { plage: "'Réglages'!B2", valeurs: [['alix@exemple.fr']] },
+    { plage: "'Réglages'!B3", valeurs: [['non']] }
   ]);
   assert.deepEqual(plan.ajouts, [['Poste dans les docs', 'Chef de projet'], ['Prénom destinataire', 'Alix'], ['Début du suivi', '2026-10-01']]);
-  // « Écriture docs réels » n'est jamais touché depuis cet écran.
-  assert.ok(!plan.modifications.some((m) => m.plage.endsWith('B3')));
+  // Interrupteur « Écriture docs réels » : coché → oui, sinon non (sur sa propre ligne).
+  assert.deepEqual(plan.modifications.find((m) => m.plage.endsWith('B3')), { plage: "'Réglages'!B3", valeurs: [['non']] });
+  assert.equal(verifierReglages({ ...saisie, ecritureDocsReels: true }).ecritureDocsReels, 'oui');
 });

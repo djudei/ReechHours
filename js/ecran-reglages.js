@@ -17,6 +17,7 @@ export function ecranReglages(reglagesSheet, vue, actions, { demo }) {
   const initiales = champ('reglage-initiales', r.initiales, { maxlength: 5, autocapitalize: 'characters', placeholder: initialesProposees(r.nomDocs) || 'JM' });
   const poste = champ('reglage-poste', r.posteDocs, { maxlength: 60, placeholder: 'ex. Account manager' });
   const prenomDest = champ('reglage-prenom-dest', r.prenomDestinataire, { maxlength: 60 });
+  const docsReels = h('input', { id: 'reglage-docs-reels', type: 'checkbox', class: 'interrupteur', checked: Boolean(r.ecritureDocsReels) });
   const debutSuivi = h('input', { id: 'reglage-debut', type: 'date', value: r.debutSuivi || '' });
   const emailDest = champ('reglage-email-dest', r.emailDestinataire, { type: 'email', inputmode: 'email', autocapitalize: 'off', maxlength: 120 });
   nomDocs.addEventListener('input', () => { initiales.placeholder = initialesProposees(nomDocs.value) || 'JM'; });
@@ -25,7 +26,8 @@ export function ecranReglages(reglagesSheet, vue, actions, { demo }) {
     evenement.preventDefault();
     actions.enregistrer({
       nomDocs: nomDocs.value, initiales: initiales.value, posteDocs: poste.value,
-      prenomDestinataire: prenomDest.value, emailDestinataire: emailDest.value, debutSuivi: debutSuivi.value
+      prenomDestinataire: prenomDest.value, emailDestinataire: emailDest.value, debutSuivi: debutSuivi.value,
+      ecritureDocsReels: docsReels.checked
     });
   };
   const ligne = (id, libelle, element) => h('label', { class: 'champ-ligne', for: id }, h('span', {}, libelle), element);
@@ -51,6 +53,8 @@ export function ecranReglages(reglagesSheet, vue, actions, { demo }) {
         ligne('reglage-debut', t('reglages.debutSuivi'), debutSuivi),
         info(t('reglages.regleAgence'), t('reglages.regleAgence.valeur'))),
       aide(t('reglages.temps.aide')),
+      groupe(t('docs.ouvrir'), ligne('reglage-docs-reels', t('reglages.docsReels'), docsReels)),
+      aide(t('reglages.docsReels.aide')),
       vue.erreur ? h('p', { class: 'note erreur', role: 'alert' }, vue.erreur) : null,
       h('button', { class: 'bouton-principal bouton-large', type: 'submit', disabled: vue.enCours }, t('reglages.enregistrer'))),
     ...groupe(t('reglages.sheet'),

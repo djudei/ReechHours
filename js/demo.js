@@ -6,8 +6,8 @@ import { ONGLETS, REGLAGES } from './schema.js';
 
 // Projets et personnes inventés (jamais de vraies données dans ce dépôt public).
 const PROJETS = [
-  ['2014', 'MOREL – site vitrine', 'projet', 'actif', ''],
-  ['2009', 'LUMEN – contenus', 'projet', 'actif', ''],
+  ['2014', 'MOREL – site vitrine', 'projet', 'actif', `https://docs.google.com/spreadsheets/d/${'DEMO_DOC_MOREL_0000000'}/edit`],
+  ['2009', 'LUMEN – contenus', 'projet', 'actif', `https://docs.google.com/spreadsheets/d/${'DEMO_DOC_LUMEN_0000000'}/edit`],
   ['2011', 'VEGA – identité', 'projet', 'actif', ''],
   ['1001', 'Admin, compta', 'interne', 'actif', '']
 ];
@@ -39,6 +39,12 @@ export function sourceDemo() {
       [REGLAGES.debutSuivi, '2026-01-01']]
   };
   let generes = {};
+  // Deux docs projets inventés (onglet TIMESHEET) : MOREL est un doc « TEST », LUMEN un vrai doc.
+  const modeleDoc = (lignes) => [['Profil', 'Taux', 'T3 2026', 'T4 2026', 'Total'], ['Chef de projet'], ...lignes, ['Prénom - à compléter'], ['Global TH']];
+  const docsDemo = {
+    DEMO_DOC_MOREL_0000000: { titre: 'TEST MOREL – timesheet', grille: modeleDoc([['Sam B', '', '1', '2']]) },
+    DEMO_DOC_LUMEN_0000000: { titre: 'LUMEN – timesheet', grille: modeleDoc([['Camille D', '', '', '1,5']]) }
+  };
 
   return {
     async lireSheet() {
@@ -63,11 +69,13 @@ export function sourceDemo() {
       onglets = { ...onglets, [onglet]: onglets[onglet].filter((__, i) => i !== numeroLigne - 2) };
     },
     // Onglets générés (mise à jour du Google Sheet) : gardés en mémoire, pour voir le parcours sans Google.
-    async lireStructure() {
+    async lireStructure(id) {
+      if (docsDemo[id]) return { lien: '#', titre: docsDemo[id].titre, onglets: [{ titre: 'TIMESHEET', sheetId: 0 }] };
       const titres = [ONGLETS.PROJETS, ONGLETS.SAISIES, ONGLETS.REGLAGES, ...Object.keys(generes)];
       return { lien: '#', titre: 'Timesheets+ App', onglets: titres.map((titre, i) => ({ titre, sheetId: i, lignes: 1000, colonnes: 26, regles: 0 })) };
     },
-    async lireValeurs(_, plages) {
+    async lireValeurs(id, plages) {
+      if (docsDemo[id]) return [docsDemo[id].grille];
       return plages.map((p) => {
         const nom = /^'?([^'!]+)'?!/.exec(p)?.[1];
         if (onglets[nom]) return [['Réglage', 'Valeur'], ...onglets[nom]];
@@ -83,7 +91,14 @@ export function sourceDemo() {
       modifications.forEach(({ plage, valeurs }) => { generes = { ...generes, [/^'(.+)'!/.exec(plage)[1]]: valeurs }; });
     },
     async viderPlages() {},
-    async modifierPlages(_, modifications) {
+    async modifierPlages(id, modifications) {
+      if (docsDemo[id]) {
+        modifications.forEach(({ plage, valeurs }) => {
+          const [, col, ligne] = /!([A-Z]+)(\d+)$/.exec(plage);
+          docsDemo[id].grille[Number(ligne) - 1][col.charCodeAt(0) - 65] = String(valeurs[0][0]).replace('.', ',');
+        });
+        return;
+      }
       // Onglet entier écrit depuis A1 (Charge) : remplacé tel quel.
       const entiers = modifications.filter((m) => /^'(.+)'!A1$/.test(m.plage));
       entiers.forEach(({ plage, valeurs }) => { generes = { ...generes, [/^'(.+)'!/.exec(plage)[1]]: valeurs }; });
