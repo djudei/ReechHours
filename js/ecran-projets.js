@@ -11,7 +11,7 @@ const TRACE_LOUPE = 'M11 4.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM20 20l-4.2-4
 
 /**
  * vue : { filtre: 'actifs' | 'archives', feuille }
- * actions : { filtrer(filtre), ouvrirProjet(code), nouveau(), fermer(), creer(champs), renommer(nom?), basculerStatut(), supprimer() }
+ * actions : { filtrer(filtre), ouvrirProjet(code), nouveau(), fermer(), creer(champs), renommer(nom?), lierDoc(lien?), basculerStatut(), supprimer() }
  */
 export function ecranProjets(donnees, vue, actions) {
   const { projets, reglages } = donnees;
@@ -48,7 +48,7 @@ export function ecranProjets(donnees, vue, actions) {
             h('span', { class: 'pastille', style: { background: p.statut === 'actif' ? couleurChoix(p.code, projets) : 'var(--neutre)' } }),
             h('span', { class: 'ligne-texte' },
               h('span', { class: 'ligne-titre ligne-titre-badge' }, p.nom, p.equipe ? h('span', { class: 'badge' }, t('projets.equipe')) : null),
-              h('span', { class: 'ligne-sous-titre' }, p.code)),
+              h('span', { class: 'ligne-sous-titre' }, p.code, p.lienDoc ? h('span', { class: 'doc-lie' }, ` · ${t('projets.lien.court')}`) : null)),
             h('span', { class: 'ligne-duree' }, icone(TRACES.suivant, 14, 3)))))));
     }),
     vue.feuille?.mode === 'nouveau' ? feuilleNouveauProjet(donnees, vue.feuille, actions) : null,
@@ -128,8 +128,17 @@ function feuilleProjet(donnees, feuille, actions) {
     setTimeout(() => champ.select(), 0);
     corps = [h('form', { class: 'renommage', onsubmit: (e) => { e.preventDefault(); actions.renommer(champ.value); } },
       champ, h('button', { class: 'bouton-principal bouton-petit', type: 'submit', disabled: feuille.enCours }, t('manuel.renommer.ok')))];
+  } else if (feuille.lien) {
+    // Pas de focus automatique : le clavier ne s'ouvre qu'en touchant le champ (on colle souvent le lien).
+    const champ = h('input', { type: 'url', inputmode: 'url', autocapitalize: 'off', value: projet.lienDoc || '',
+      placeholder: 'https://docs.google.com/spreadsheets/d/…', 'aria-label': t('projets.lien') });
+    corps = [h('form', { class: 'renommage', onsubmit: (e) => { e.preventDefault(); actions.lierDoc(champ.value); } },
+      champ, h('button', { class: 'bouton-principal bouton-petit', type: 'submit', disabled: feuille.enCours }, t('manuel.renommer.ok'))),
+      h('p', { class: 'note note-feuille' }, t('projets.lien.aide'))];
   } else {
     corps = [h('div', { class: 'actions-projet' },
+      h('button', { class: 'bouton-secondaire', onclick: () => actions.lierDoc(), disabled: feuille.enCours },
+        projet.lienDoc ? t('projets.lien.changer') : t('projets.lien.ajouter')),
       h('button', { class: 'bouton-secondaire', onclick: () => actions.renommer(), disabled: feuille.enCours }, t('projets.renommer')),
       h('button', { class: 'bouton-secondaire', onclick: actions.basculerStatut, disabled: feuille.enCours },
         actif ? t('projets.archiver') : t('projets.reactiver')),
@@ -142,6 +151,8 @@ function feuilleProjet(donnees, feuille, actions) {
       h('span', { class: 'secondaire ligne-titre-badge' }, projet.code,
         projet.equipe ? h('span', { class: 'badge' }, t('projets.equipe')) : null,
         actif ? null : h('span', { class: 'badge badge-gris' }, t('projets.archive.statut')))),
+    projet.lienDoc ? h('a', { class: 'lien lien-doc', href: projet.lienDoc, target: '_blank', rel: 'noopener' }, t('projets.lien.ouvrir'))
+      : h('p', { class: 'note note-feuille' }, t('projets.lien.aucun')),
     ...corps
   ], feuille, actions);
 }

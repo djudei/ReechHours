@@ -5,7 +5,7 @@ import { t } from './textes.js';
 import { interpreterReglages, lireProjets, lireSaisies, CODES } from './regles.js';
 import { evenementDepuisApi, creneauxDuJour, resumeSemaine, joursDeLaSemaine, ajouterJours } from './semaine.js';
 import { planSynchroSemaine, planAttribution, verifierChoix, horodatage } from './ecriture.js';
-import { planCreation, planStatut, planRenommageProjet, planSuppressionProjet, categories } from './projets.js';
+import { planCreation, planStatut, planRenommageProjet, planSuppressionProjet, planLienDoc, categories } from './projets.js';
 import { dateTexte } from './semaine.js';
 import { construireRecap, dateLimitePour } from './recap.js';
 import { ONGLET_CHARGE, INTITULES_PAR_DEFAUT, lireIntitulesCharge, lireTableauCharge, zonesDuMois, zonesParDefaut, verifierZones, grilleCharge, moisSuivant } from './charge.js';
@@ -255,6 +255,13 @@ export async function changerStatutProjet({ idSheet, code, statut, source = sour
   const sheet = await source.lireSheet(idSheet);
   const { plage, valeur } = planStatut({ code, statut, projets: sheet.projets });
   await source.modifierPlages(idSheet, [{ plage, valeurs: [[valeur]] }]);
+}
+
+export async function lierDocProjet({ idSheet, code, lien, source = sourceGoogle }) {
+  const sheet = await source.lireSheet(idSheet);
+  const { plage, valeur } = planLienDoc({ code, lien, projets: sheet.projets });
+  await source.modifierPlages(idSheet, [{ plage, valeurs: [[valeur]] }]);
+  return valeur;
 }
 
 export async function renommerProjet({ idSheet, code, nom, source = sourceGoogle }) {

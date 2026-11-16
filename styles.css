@@ -761,3 +761,7 @@ body.feuille-ouverte { overflow: hidden; }
 .ligne-doc.docs-anomalie .ligne-doc-detail, .ligne-doc.docs-conflit .ligne-doc-detail { color: var(--signal-texte); }
 .ligne-doc.docs-ecrit .ligne-doc-detail { color: var(--texte); font-weight: 600; }
 .ligne-doc .choix-speciaux { margin-top: 6px; }
+
+/* Projets : doc lié (orange, comme dans Timesheets+) et lien dans la fiche. */
+.doc-lie { color: var(--signal-texte); }
+.lien-doc { display: inline-block; margin: 0 0 12px; }

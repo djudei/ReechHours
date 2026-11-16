@@ -38,3 +38,13 @@ test('supprimer : seulement sans créneau attribué (sinon on propose d\'archive
   assert.equal(planSuppressionProjet({ code: '2026-003', projets, saisies }), 5);
   assert.throws(() => planSuppressionProjet({ code: '2026-001', projets, saisies }), /2 créneaux/);
 });
+
+test('lien du doc : colonne E du projet ; lien de Google Sheet ou vide, sinon erreur', async () => {
+  const { planLienDoc } = await import('../js/projets.js');
+  const lien = ' https://docs.google.com/spreadsheets/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/edit ';
+  const plan = planLienDoc({ code: projets[0].code, lien, projets });
+  assert.equal(plan.plage, `'Projets'!E${projets[0].numeroLigne}`);
+  assert.equal(plan.valeur, lien.trim());
+  assert.equal(planLienDoc({ code: projets[0].code, lien: '', projets }).valeur, '');
+  assert.throws(() => planLienDoc({ code: projets[0].code, lien: 'https://exemple.fr/doc', projets }));
+});

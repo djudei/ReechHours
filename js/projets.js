@@ -64,6 +64,18 @@ export function planRenommageProjet({ code, nom, projets }) {
 }
 
 /**
+ * Lien du Google Sheet du projet (colonne « Lien doc ») : un lien de Google Sheet, ou vide pour le retirer.
+ */
+export function planLienDoc({ code, lien, projets }) {
+  const propre = String(lien ?? '').trim();
+  if (propre && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]{20,}/.test(propre)) {
+    throw new Error(t('projets.lien.erreur'));
+  }
+  const projet = projetModifiable(code, projets);
+  return { plage: `'${ONGLET_PROJETS}'!E${projet.numeroLigne}`, valeur: propre };
+}
+
+/**
  * Supprimer (ex. doublon créé par erreur) : seulement si aucun créneau ne lui est attribué. Renvoie la ligne à retirer.
  */
 export function planSuppressionProjet({ code, projets, saisies }) {

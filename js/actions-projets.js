@@ -1,6 +1,6 @@
 // Actions de l'écran Projets : ouvrir / fermer les feuilles, créer, renommer, archiver, supprimer.
 // « appli » donne accès à l'état et aux outils communs de app.js (lire, changer, rendre, message, relire).
-import { creerProjet, changerStatutProjet, renommerProjet, supprimerProjet } from './donnees.js';
+import { creerProjet, changerStatutProjet, renommerProjet, supprimerProjet, lierDocProjet } from './donnees.js';
 import { t } from './textes.js';
 
 export function actionsProjets(appli) {
@@ -17,7 +17,7 @@ export function actionsProjets(appli) {
     try {
       const texte = message(await action());
       await appli.relire();
-      changerVue({ feuille: garderOuverte ? { ...vue().feuille, enCours: false, renommer: false, confirmer: false } : null });
+      changerVue({ feuille: garderOuverte ? { ...vue().feuille, enCours: false, renommer: false, lien: false, confirmer: false } : null });
       appli.message(texte);
     } catch (erreur) {
       changerFeuille({ enCours: false, erreur: erreur.message });
@@ -42,7 +42,7 @@ export function actionsProjets(appli) {
         (code) => t('projets.cree', { code }));
     },
     ouvrirProjet: (code) => {
-      changerVue({ feuille: { mode: 'projet', code, renommer: false, confirmer: false, enCours: false, erreur: '' } });
+      changerVue({ feuille: { mode: 'projet', code, renommer: false, lien: false, confirmer: false, enCours: false, erreur: '' } });
       appli.rendre();
     },
     fermer,
@@ -52,6 +52,15 @@ export function actionsProjets(appli) {
         return appli.rendre();
       }
       return ecrire(() => renommerProjet({ ...appli.acces(), code: vue().feuille.code, nom }), () => t('projets.renomme'), true);
+    },
+    // Sans lien : ouvre le champ ; avec : enregistre (vide = lien retiré).
+    lierDoc: (lien) => {
+      if (lien === undefined) {
+        changerFeuille({ lien: true, renommer: false, confirmer: false, erreur: '' });
+        return appli.rendre();
+      }
+      return ecrire(() => lierDocProjet({ ...appli.acces(), code: vue().feuille.code, lien }),
+        (valeur) => t(valeur ? 'projets.lien.fait' : 'projets.lien.retire'), true);
     },
     basculerStatut: () => {
       const { nom, statut } = projet();
