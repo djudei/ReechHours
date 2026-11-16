@@ -51,6 +51,11 @@ export function ecranProjets(donnees, vue, actions) {
               h('span', { class: 'ligne-sous-titre' }, p.code, p.lienDoc ? h('span', { class: 'doc-lie' }, ` · ${t('projets.lien.court')}`) : null)),
             h('span', { class: 'ligne-duree' }, icone(TRACES.suivant, 14, 3)))))));
     }),
+    h('div', { class: 'pied-recap' },
+      h('button', { class: 'bouton-secondaire bouton-large', onclick: actions.synchroniserAgence, disabled: vue.agence?.enCours },
+        vue.agence?.enCours ? t('agence.projets.encours') : t('agence.projets.bouton')),
+      vue.agence?.message ? h('p', { class: 'note', role: 'status' }, vue.agence.message) : null,
+      vue.agence?.erreur ? h('p', { class: 'note erreur', role: 'alert' }, vue.agence.erreur) : null),
     vue.feuille?.mode === 'nouveau' ? feuilleNouveauProjet(donnees, vue.feuille, actions) : null,
     vue.feuille?.mode === 'projet' ? feuilleProjet(donnees, vue.feuille, actions) : null);
 }

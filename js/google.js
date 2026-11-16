@@ -62,6 +62,12 @@ export async function connecter({ invite = false } = {}) {
   });
 }
 
+/** Jeton valide de la personne (pour le collecteur de la base agence, qui le vérifie auprès de Google). */
+export async function jetonValide() {
+  if (!estConnecte()) await connecter();
+  return jeton;
+}
+
 export function estConnecte() {
   return Boolean(jeton) && Date.now() < expireA - MARGE_EXPIRATION_MS;
 }

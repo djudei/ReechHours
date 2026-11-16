@@ -1,6 +1,7 @@
 // Actions de l'écran Projets : ouvrir / fermer les feuilles, créer, renommer, archiver, supprimer.
 // « appli » donne accès à l'état et aux outils communs de app.js (lire, changer, rendre, message, relire).
-import { creerProjet, changerStatutProjet, renommerProjet, supprimerProjet, lierDocProjet } from './donnees.js';
+import { creerProjet, changerStatutProjet, renommerProjet, supprimerProjet, lierDocProjet, synchroniserProjetsAgence } from './donnees.js';
+import { messageSynchroAgence, noterSynchroAgence } from './synchro-agence.js';
 import { t } from './textes.js';
 
 export function actionsProjets(appli) {
@@ -27,6 +28,20 @@ export function actionsProjets(appli) {
 
   return {
     filtrer: (filtre) => { changerVue({ filtre }); appli.rendre(); },
+    // « Mettre à jour depuis la base agence » : ajouts, archivages, liens de doc ; jamais de renommage ni de suppression.
+    synchroniserAgence: async () => {
+      changerVue({ agence: { enCours: true } });
+      appli.rendre();
+      try {
+        const r = await synchroniserProjetsAgence(appli.acces());
+        noterSynchroAgence();
+        await appli.relire();
+        changerVue({ agence: { message: messageSynchroAgence(r) } });
+      } catch (erreur) {
+        changerVue({ agence: { erreur: erreur.message } });
+      }
+      appli.rendre();
+    },
     nouveau: () => {
       changerVue({ feuille: { mode: 'nouveau', type: 'projet', nom: '', lettres: '', code: '', codeTouche: false, enCours: false, erreur: '' } });
       appli.rendre();

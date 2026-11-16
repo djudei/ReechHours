@@ -65,6 +65,7 @@ function contenu(recap, donnees, vue, actions) {
     recap.aAttribuerMinutes ? h('p', { class: 'note signal' }, t('recap.aAttribuer', { duree: duree(recap.aAttribuerMinutes) })) : null,
     piedExport(vue.export || {}, actions),
     piedBrouillon(vue.brouillon || {}, actions),
+    piedEnvoi(vue.envoi || {}, actions),
     h('div', { class: 'pied-recap' },
       h('button', { class: 'bouton-secondaire bouton-large', onclick: actions.docs }, t('docs.ouvrir')),
       h('p', { class: 'note' }, t('docs.ouvrir.aide')))
@@ -137,4 +138,13 @@ function piedBrouillon(etat, actions) {
     etat.message ? h('p', { class: 'note', role: 'status' }, etat.message) : null,
     etat.erreur ? h('p', { class: 'note erreur', role: 'alert' }, etat.erreur) : null,
     etat.lien ? h('a', { class: 'lien lien-centre', href: etat.lien, target: '_blank', rel: 'noopener' }, t('email.ouvrir')) : null);
+}
+
+// « Envoyer à la base » : jours du mois des projets clients vers la base agence (remplace l'envoi précédent du mois).
+function piedEnvoi(etat, actions) {
+  return h('div', { class: 'pied-recap' },
+    h('button', { class: 'bouton-secondaire bouton-large', onclick: actions.envoyer, disabled: etat.enCours },
+      etat.enCours ? t('agence.temps.encours') : t('agence.temps.bouton')),
+    etat.message ? h('p', { class: 'note', role: 'status' }, etat.message) : null,
+    etat.erreur ? h('p', { class: 'note erreur', role: 'alert' }, etat.erreur) : null);
 }

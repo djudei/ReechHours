@@ -1,13 +1,15 @@
 // Démarrage et enchaînement des écrans : connexion → Sheet → Semaine (+ feuille Trier).
 import { CLIENT_ID } from './config.js';
 import { connecter, deconnecter } from './google.js';
-import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, simulerDocs, ecrireDocs, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
+import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, simulerDocs, ecrireDocs, synchroniserProjetsAgence, envoyerTempsAgence, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
 import { idSheetDepuisLien } from './regles.js';
 import { lundiDe, ajouterJours, dateTexte, resumeSemaine } from './semaine.js';
 import { sourceDemo } from './demo.js';
 import { ecranSemaine } from './ecran-semaine.js';
 import { feuilleTri, projetsPourTri } from './ecran-tri.js';
 import { feuilleDocs } from './ecran-docs.js';
+import { messageSynchroAgence, synchroAgenceDue, noterSynchroAgence } from './synchro-agence.js';
+import { AGENCE_URL } from './config.js';
 import { feuilleNouveau, heuresParDefaut, heuresDepuisAppui } from './ecran-manuel.js';
 import { ecranProjets } from './ecran-projets.js';
 import { ecranRecap, decalerMois } from './ecran-recap.js';
@@ -164,7 +166,7 @@ async function chargerMoisRecap() {
 const actionsRecap = {
   docs: () => actionsDocs.ouvrir(),
   changerMois: (decalage) => {
-    changer({ vueRecap: { ...etat.vueRecap, mois: decalerMois(etat.vueRecap.mois, decalage), export: null, brouillon: null } });
+    changer({ vueRecap: { ...etat.vueRecap, mois: decalerMois(etat.vueRecap.mois, decalage), export: null, brouillon: null, envoi: null } });
     chargerMoisRecap();
   },
   afficher: (affichage) => { changer({ vueRecap: { ...etat.vueRecap, affichage } }); rendre(); },
@@ -177,6 +179,19 @@ const actionsRecap = {
       changerExport({ message, lien: estDemo ? '' : r.lien, erreur: '' });
     } catch (erreur) {
       changerExport({ erreur: t('erreur.ecriture', { detail: erreur.message }) });
+    }
+  },
+  envoyer: async () => {
+    const changerEnvoi = (valeur) => { changer({ vueRecap: { ...etat.vueRecap, envoi: valeur } }); rendre(); };
+    changerEnvoi({ enCours: true });
+    try {
+      const r = await envoyerTempsAgence({ idSheet: lireIdSheet(), mois: etat.vueRecap.mois, aujourdhui, source });
+      const morceaux = [t(r.envoyes ? 'agence.temps.fait' : 'agence.temps.rien', { nombre: r.enregistres, mois: r.mois.split('-').reverse().join('/') })];
+      if (r.ignores.length) morceaux.push(t('agence.temps.ignores', { liste: r.ignores.map((x) => x?.numero ?? x).join(', ') }));
+      if (r.aAttribuerMinutes) morceaux.push(t('agence.temps.aAttribuer'));
+      changerEnvoi({ message: morceaux.join(' ') });
+    } catch (erreur) {
+      changerEnvoi({ erreur: erreur.message });
     }
   },
   brouillon: async () => {
@@ -267,12 +282,28 @@ async function charger() {
     changer({ donnees });
     rendre();
     if (donnees.synchro.ajoutes) montrerMessage(t('semaine.synchro', { nombre: donnees.synchro.ajoutes }));
+    synchroAgenceDiscrete();
   } catch (erreur) {
     afficher(ecranErreur({
       message: erreur.message,
       onReessayer: charger,
       onChangerSheet: estDemo ? null : () => { ecrireIdSheet(''); demanderSheet(); }
     }));
+  }
+}
+
+// Projets de la base agence : au plus toutes les 6 heures, sans bloquer l'appli ; un message seulement s'il y a du nouveau.
+async function synchroAgenceDiscrete() {
+  if (!AGENCE_URL || estDemo || !synchroAgenceDue()) return;
+  noterSynchroAgence();
+  try {
+    const r = await synchroniserProjetsAgence({ idSheet: lireIdSheet(), source });
+    if (r.ajoutes.length || r.archives.length || r.liens.length) {
+      await rafraichir();
+      montrerMessage(messageSynchroAgence(r));
+    }
+  } catch {
+    // Base injoignable : on réessaiera à la prochaine ouverture. L'appli reste utilisable.
   }
 }
 
