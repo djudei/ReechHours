@@ -17,7 +17,7 @@ export const SCOPES = [
 // Adresse du collecteur de la base agence (projet Apps Script « Agence », déploiement pour ReechHours).
 // Pas un secret : le collecteur n'accepte que les comptes Google de l'agence, vérifiés auprès de Google.
 // Vide tant que le collecteur n'est pas prêt : les boutons de la base agence le disent.
-export const AGENCE_URL = '';
+export const AGENCE_URL = 'https://script.google.com/macros/s/AKfycbzq7gbHhJvnOdqMxy4OzrCWxQD0RupJBYxrwXBVjvSnzTQUIPSWnZxHlKXCFIkhbU9g/exec';
 
 // Lien vers l'ancienne appli : volontairement vide dans ce dépôt public (adresse interne à l'agence).
 export const LIEN_APPLI_ACTUELLE = '';
