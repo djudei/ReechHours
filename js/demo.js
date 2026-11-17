@@ -61,7 +61,7 @@ export function sourceDemo() {
         return [{ numero: '2120', client: 'ORION', nom: 'Lancement', statut: 'En cours', lienAncienSheet: '' },
           { numero: '2011', client: 'VEGA', nom: 'identité', statut: 'Terminé', lienAncienSheet: '' }];
       }
-      return { enregistres: donnees.lignes.length, ignores: [] };
+      return { enregistres: donnees.lignes, ignores: [] };
     },
     async lireEvenements(debut) {
       const jours = joursDeLaSemaine(debut);

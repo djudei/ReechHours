@@ -59,7 +59,7 @@ function sourceFausse() {
     async appelerAgence(action, donnees) {
       appels.push({ action, donnees });
       return action === 'projets' ? [{ numero: '2120', client: 'ORION', nom: 'Lancement', statut: 'En cours' }, { numero: '2105', statut: 'Terminé' }]
-        : { enregistres: donnees.lignes.length, ignores: [] };
+        : { mois: donnees.mois, enregistres: donnees.lignes, ignores: [] };
     },
     async modifierPlages(_, m) { ecrit.modifications.push(...m); },
     async ajouterLignes(_, l, onglet) { ecrit.ajouts.push({ l, onglet }); }

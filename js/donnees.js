@@ -514,7 +514,9 @@ export async function envoyerTempsAgence({ idSheet, mois, aujourdhui, source = s
   const reponse = await source.appelerAgence('temps', { mois: recap.mois, lignes });
   return {
     mois: recap.mois, dateLimite: recap.dateLimite, envoyes: lignes.length,
-    enregistres: reponse?.enregistres ?? lignes.length, ignores: reponse?.ignores || [], aAttribuerMinutes: recap.aAttribuerMinutes
+    // Le collecteur renvoie la liste des lignes gardées : [{ numero, jours }].
+    enregistres: Array.isArray(reponse?.enregistres) ? reponse.enregistres.length : lignes.length,
+    ignores: reponse?.ignores || [], aAttribuerMinutes: recap.aAttribuerMinutes
   };
 }
 
