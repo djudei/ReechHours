@@ -213,6 +213,7 @@ const FR = {
   'export.equipe': ' Tes totaux sont aussi partis vers ton équipe.',
   'export.equipeErreur': 'Ton Sheet est à jour, mais l\'envoi à l\'équipe a échoué : {detail}',
   'export.ouvrir': 'Ouvrir mon Google Sheet',
+  'erreur.domaine': 'Le compte {email} n\'est pas un compte de l\'agence : connecte-toi avec ton adresse @{domaine}.',
   'docs.ouvrir': 'Mettre à jour les docs projets',
   'docs.ouvrir.aide': 'Écrit tes jours du trimestre dans l\'onglet TIMESHEET de chaque doc projet. Une simulation s\'affiche d\'abord : rien n\'est écrit sans ta confirmation.',
   'docs.titre': 'Docs projets · {trimestre}',

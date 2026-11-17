@@ -1,6 +1,6 @@
 // Connexion Google et appels aux API, depuis le navigateur de la personne.
 // Le jeton d'accès reste en mémoire (jamais enregistré) ; Google le donne pour une heure environ.
-import { CLIENT_ID, SCOPES } from './config.js';
+import { CLIENT_ID, SCOPES, DOMAINE_AUTORISE, adresseAutorisee } from './config.js';
 import { t } from './textes.js';
 
 const MARGE_EXPIRATION_MS = 60000;
@@ -33,6 +33,7 @@ export async function connecter({ invite = false } = {}) {
     client = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
+      hosted_domain: DOMAINE_AUTORISE,   // propose d'abord le compte de l'agence
       callback: (reponse) => {
         const attente = enAttente;
         enAttente = null;
@@ -45,9 +46,15 @@ export async function connecter({ invite = false } = {}) {
           attente.rejeter(new Error(t('erreur.accesIncomplets')));
           return;
         }
-        jeton = reponse.access_token;
-        expireA = Date.now() + Number(reponse.expires_in || 0) * 1000;
-        attente.resoudre(jeton);
+        // Compte de l'agence uniquement : on demande à Google l'adresse du compte connecté.
+        verifierAdresse(reponse.access_token).then(() => {
+          jeton = reponse.access_token;
+          expireA = Date.now() + Number(reponse.expires_in || 0) * 1000;
+          attente.resoudre(jeton);
+        }, (erreur) => {
+          window.google.accounts.oauth2.revoke(reponse.access_token, () => {});
+          attente.rejeter(erreur);
+        });
       },
       error_callback: (erreur) => {
         const attente = enAttente;
@@ -60,6 +67,15 @@ export async function connecter({ invite = false } = {}) {
     enAttente = { resoudre, rejeter };
     client.requestAccessToken({ prompt: invite ? 'consent' : '' });
   });
+}
+
+/** Adresse du compte connecté (dite par Google) : refus si elle n'est pas du domaine de l'agence. */
+async function verifierAdresse(jetonRecu) {
+  const reponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${jetonRecu}` } });
+  const infos = reponse.ok ? await reponse.json() : {};
+  if (!infos.email_verified || !adresseAutorisee(infos.email)) {
+    throw new Error(t('erreur.domaine', { email: infos.email || '?', domaine: DOMAINE_AUTORISE }));
+  }
 }
 
 export function estConnecte() {

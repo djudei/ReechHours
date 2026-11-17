@@ -10,8 +10,19 @@ export const CLIENT_ID = '176680700160-g687paf64f7klgtv49t29ncsvt27t1si.apps.goo
 export const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/spreadsheets',
-  'https://www.googleapis.com/auth/gmail.compose'   // créer des brouillons (jamais d'envoi par l'appli)
+  'https://www.googleapis.com/auth/gmail.compose',  // créer des brouillons (jamais d'envoi par l'appli)
+  'https://www.googleapis.com/auth/userinfo.email'  // ton adresse : seules les adresses de l'agence sont acceptées
 ].join(' ');
+
+// Seuls les comptes Google de ce domaine peuvent utiliser l'appli (vérifié à chaque connexion,
+// en plus de l'audience « Interne » réglée dans Google Cloud).
+export const DOMAINE_AUTORISE = 'reech.com';
+
+/** Adresse email → true si elle appartient au domaine autorisé (« prenom@reech.com »). */
+export function adresseAutorisee(email) {
+  const morceaux = String(email || '').trim().toLowerCase().split('@');
+  return morceaux.length === 2 && morceaux[0] !== '' && morceaux[1] === DOMAINE_AUTORISE;
+}
 
 // Lien vers l'ancienne appli : volontairement vide dans ce dépôt public (adresse interne à l'agence).
 export const LIEN_APPLI_ACTUELLE = '';
