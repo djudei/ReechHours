@@ -55,14 +55,6 @@ export function sourceDemo() {
       };
     },
     async creerBrouillon() { return { idMessage: '' }; },
-    // Base agence inventée : un nouveau projet, un projet terminé.
-    async appelerAgence(action, donnees) {
-      if (action === 'projets') {
-        return [{ numero: '2120', client: 'ORION', nom: 'Lancement', statut: 'En cours', lienAncienSheet: '' },
-          { numero: '2011', client: 'VEGA', nom: 'identité', statut: 'Terminé', lienAncienSheet: '' }];
-      }
-      return { enregistres: donnees.lignes.length, ignores: [] };
-    },
     async lireEvenements(debut) {
       const jours = joursDeLaSemaine(debut);
       return AGENDA.map(([jour, de, a, titre]) => evenementDepuisApi({

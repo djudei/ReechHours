@@ -1,8 +1,6 @@
 // Lecture et écriture des données de la personne : son Google Sheet Hours et son Agenda principal.
 // Chaque écriture part d'une lecture fraîche du Sheet (l'appli actuelle peut l'avoir modifié entre-temps).
-import { lireGoogle, ecrireGoogle, jetonValide } from './google.js';
-import { AGENCE_URL } from './config.js';
-import { changementsProjetsAgence, lignesTempsAgence, lireReponseAgence } from './agence.js';
+import { lireGoogle, ecrireGoogle } from './google.js';
 import { t } from './textes.js';
 import { interpreterReglages, lireProjets, lireSaisies, CODES } from './regles.js';
 import { evenementDepuisApi, creneauxDuJour, resumeSemaine, joursDeLaSemaine, ajouterJours } from './semaine.js';
@@ -50,24 +48,6 @@ export const sourceGoogle = {
   async creerBrouillon(brut) {
     const reponse = await ecrireGoogle('https://gmail.googleapis.com/gmail/v1/users/me/drafts', 'POST', { message: { raw: brut } });
     return { idMessage: reponse.message?.id || '' };
-  },
-
-  /**
-   * Appel du collecteur de la base agence. Envoi en texte simple (pas d'en-tête particulier) : c'est ce que
-   * les applis Apps Script acceptent depuis une page web. Le jeton Google prouve qui appelle.
-   */
-  async appelerAgence(action, donnees = null) {
-    if (!AGENCE_URL) throw new Error(t('agence.pasReliee'));
-    const jeton = await jetonValide();
-    let reponse;
-    try {
-      reponse = await fetch(AGENCE_URL, { method: 'POST', body: JSON.stringify({ jeton, action, donnees }) });
-    } catch {
-      throw new Error(t('agence.erreur', { detail: t('agence.injoignable') }));
-    }
-    const resultat = lireReponseAgence(reponse.status, await reponse.text());
-    if (!resultat.succes) throw new Error(t('agence.erreur', { detail: resultat.erreur }));
-    return resultat.donnees;
   },
 
   /** Événements de l'Agenda principal entre deux dates (fin exclue), répétitions dépliées. */
@@ -477,45 +457,6 @@ export async function ecrireDocs({ idSheet, mois, aujourdhui, remplacer = [], so
     }
   }
   return simulation;
-}
-
-// ---------- Base agence ----------
-
-/**
- * Met l'onglet Projets à jour depuis la base agence (ajouts, archivages, liens de doc ; jamais de renommage
- * ni de suppression). → { ajoutes: [« 2120 ACME – Lancement »], archives: […], liens: […] }
- */
-export async function synchroniserProjetsAgence({ idSheet, source = sourceGoogle }) {
-  const distants = await source.appelerAgence('projets');
-  const sheet = await source.lireSheet(idSheet);   // relu après l'appel : le plus récent possible
-  const { ajouts, archivages, liens } = changementsProjetsAgence(sheet.projets, distants);
-  const modifications = [
-    ...archivages.map((a) => ({ plage: `'${ONGLETS.PROJETS}'!D${a.numeroLigne}`, valeurs: [['archivé']] })),
-    ...liens.map((l) => ({ plage: `'${ONGLETS.PROJETS}'!E${l.numeroLigne}`, valeurs: [[l.lien]] }))
-  ];
-  if (modifications.length) await source.modifierPlages(idSheet, modifications);
-  if (ajouts.length) await source.ajouterLignes(idSheet, ajouts.map((a) => [a.code, a.nom, 'projet', 'actif', a.lien]), ONGLETS.PROJETS);
-  const texte = (x) => `${x.code} ${x.nom}`;
-  return { ajoutes: ajouts.map(texte), archives: archivages.map(texte), liens: liens.map(texte) };
-}
-
-/**
- * Envoie à la base les jours du mois (à date pour le mois en cours) des projets clients au N° numérique.
- * La base remplace l'envoi précédent de la personne pour ce mois : relancer ne double rien.
- */
-export async function envoyerTempsAgence({ idSheet, mois, aujourdhui, source = sourceGoogle }) {
-  const sheet = await source.lireSheet(idSheet);
-  const [annee, numero] = mois.split('-').map(Number);
-  const recap = construireRecap({
-    saisies: sheet.saisies, projets: sheet.projets, annee, mois: numero,
-    dateLimite: dateLimitePour(mois, aujourdhui), dateDebut: sheet.reglages.debutSuivi, temps: sheet.reglages.tempsDeTravail
-  });
-  const lignes = lignesTempsAgence(recap);
-  const reponse = await source.appelerAgence('temps', { mois: recap.mois, lignes });
-  return {
-    mois: recap.mois, dateLimite: recap.dateLimite, envoyes: lignes.length,
-    enregistres: reponse?.enregistres ?? lignes.length, ignores: reponse?.ignores || [], aAttribuerMinutes: recap.aAttribuerMinutes
-  };
 }
 
 export async function chargerCharge({ idSheet, mois, source = sourceGoogle }) {
