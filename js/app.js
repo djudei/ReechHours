@@ -235,10 +235,10 @@ const actionsReglages = {
     changer({ vueReglages: { enCours: true, erreur: '', saisie } });
     rendre();
     try {
-      await enregistrerReglages({ idSheet: lireIdSheet(), saisie, source });
+      const r = await enregistrerReglages({ idSheet: lireIdSheet(), saisie, source });
       await rafraichir();
       changer({ vueReglages: { enCours: false, erreur: '' } });
-      montrerMessage(t('reglages.enregistres'));
+      montrerMessage(r.nouveauNom ? t('reglages.enregistres.nom', { nom: r.nouveauNom }) : t('reglages.enregistres'));
     } catch (erreur) {
       changer({ vueReglages: { enCours: false, saisie, erreur: erreur.message } });
       rendre();

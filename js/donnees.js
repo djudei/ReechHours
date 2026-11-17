@@ -10,7 +10,7 @@ import { dateTexte } from './semaine.js';
 import { construireRecap, dateLimitePour } from './recap.js';
 import { ONGLET_CHARGE, INTITULES_PAR_DEFAUT, lireIntitulesCharge, lireTableauCharge, zonesDuMois, zonesParDefaut, verifierZones, grilleCharge, moisSuivant } from './charge.js';
 import { nouveauClasseur, problemeStructure, EN_TETES } from './classeur.js';
-import { ONGLETS } from './schema.js';
+import { ONGLETS, nomDuSheet } from './schema.js';
 import { construireEmail, messageBrut } from './email.js';
 import { NOM_ONGLET_TIMESHEET, STATUTS, idDepuisLien, trimestreDe, planDoc, ecritureAutorisee } from './docs-projets.js';
 import { normaliser } from './regles.js';
@@ -508,13 +508,17 @@ export async function enregistrerReglages({ idSheet, saisie, source = sourceGoog
   const plan = planReglages(lignes || [], propres);
   if (plan.modifications.length) await source.modifierPlages(idSheet, plan.modifications);
   if (plan.ajouts.length) await source.ajouterLignes(idSheet, plan.ajouts, ONGLETS.REGLAGES);
-  return { renumerotes: 0 };
+  // Nom du Sheet : « REECH-HOURS_JM » (seulement s'il porte encore un nom donné par l'appli).
+  const { titre } = await source.lireStructure(idSheet);
+  const nouveauNom = nomDuSheet(titre, propres.initiales);
+  if (nouveauNom) await source.modifierClasseur(idSheet, [{ updateSpreadsheetProperties: { properties: { title: nouveauNom }, fields: 'title' } }]);
+  return { renumerotes: 0, nouveauNom };
 }
 
 // ---------- Le Sheet de la personne ----------
 
 /**
- * Nouveau venu : crée son Sheet « Timesheets+ App » (onglets, en-têtes, réglages par défaut), puis pose le format texte
+ * Nouveau venu : crée son Sheet « REECH-HOURS » (onglets, en-têtes, réglages par défaut), puis pose le format texte
  * sur les colonnes de codes, dates et heures. Renvoie son identifiant.
  */
 export async function creerSheet({ aujourdhui, source = sourceGoogle }) {

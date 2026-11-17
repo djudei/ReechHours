@@ -59,5 +59,19 @@ export const TEMPS_AGENCE = Object.freeze({
   titresConges: Object.freeze(['Non travaillé', 'Off', 'Congés', 'Congé', 'RTT'])
 });
 
-// Nom d'un Sheet créé par ReechHours (même nom que Timesheets+ avant son renommage).
-export const NOM_NOUVEAU_SHEET = 'Timesheets+ App';
+// Nom du Sheet : « REECH-HOURS » à la création, puis « REECH-HOURS_JM » (initiales) dès l'enregistrement des Réglages.
+export const NOM_NOUVEAU_SHEET = 'REECH-HOURS';
+
+/**
+ * Nom que doit porter le Sheet d'après les initiales, ou '' s'il ne faut pas y toucher.
+ * Seuls les noms donnés par une appli (ReechHours, Timesheets+) sont changés ; un nom choisi à la main est gardé.
+ */
+export function nomDuSheet(titreActuel, initiales) {
+  const titre = String(titreActuel || '').trim();
+  const propres = String(initiales || '').trim().toUpperCase();
+  if (!propres) return '';
+  const nomAppli = /^REECH-HOURS(_[A-Z]{1,5})?$/i.test(titre) || /^timesheets\+ ?app$/i.test(titre)
+    || /^[A-Z0-9-]+_[A-Z]{1,5}_timesheets\+ ?app$/i.test(titre) || /^[A-Z]{1,5}_timesheets\+ ?app$/i.test(titre);
+  const voulu = `${NOM_NOUVEAU_SHEET}_${propres}`;
+  return nomAppli && titre !== voulu ? voulu : '';
+}

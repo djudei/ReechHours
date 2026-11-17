@@ -7,9 +7,9 @@ import { nouveauClasseur, problemeStructure } from '../js/classeur.js';
 const PROJETS = ['Code', 'Nom', 'Type', 'Statut', 'Lien doc'];
 const SAISIES = ['Id', 'Date', 'Début', 'Fin', 'Minutes', 'Code projet', 'Source', 'Id événement', 'Titre', 'Attribué auto', 'Modifié le'];
 
-test('nouveau Sheet : « Timesheets+ App », onglets Projets / Saisies / Réglages, suivi au 1er du mois', () => {
+test('nouveau Sheet : « REECH-HOURS », onglets Projets / Saisies / Réglages, suivi au 1er du mois', () => {
   const c = nouveauClasseur({ aujourdhui: '2026-11-06', fuseau: 'Europe/Paris' });
-  assert.equal(c.properties.title, 'Timesheets+ App');
+  assert.equal(c.properties.title, 'REECH-HOURS');
   assert.equal(c.properties.timeZone, 'Europe/Paris');
   assert.deepEqual(c.sheets.map((s) => s.properties.title), ['Projets', 'Saisies', 'Réglages']);
   const valeurs = (titre) => c.sheets.find((s) => s.properties.title === titre).data[0].rowData
@@ -32,4 +32,16 @@ test('Sheet relié : onglet absent ou autres en-têtes → message ; Sheet Times
   assert.match(problemeStructure({ Projets: PROJETS, Saisies: ['Id', 'Date'] }), /Saisies/);
   // Un Sheet Hours (en anglais) n'est pas un Sheet Timesheets+ : rien n'est écrit dedans.
   assert.match(problemeStructure({ Projets: ['Code', 'Name', 'Type', 'Status'], Saisies: SAISIES }), /Projets/);
+});
+
+test('nom du Sheet : REECH-HOURS_<initiales> pour les noms donnés par une appli ; un nom choisi à la main est gardé', async () => {
+  const { nomDuSheet } = await import('../js/schema.js');
+  assert.equal(nomDuSheet('REECH-HOURS', 'jm'), 'REECH-HOURS_JM');
+  assert.equal(nomDuSheet('REECH-HOURS_AB', 'JM'), 'REECH-HOURS_JM');
+  assert.equal(nomDuSheet('REECH-HOURS_JM', 'JM'), '');            // déjà bon
+  assert.equal(nomDuSheet('REECH_JM_Timesheets+App', 'JM'), 'REECH-HOURS_JM');
+  assert.equal(nomDuSheet('JM_Timesheets+App', 'JM'), 'REECH-HOURS_JM');
+  assert.equal(nomDuSheet('Timesheets+ App', 'JM'), 'REECH-HOURS_JM');
+  assert.equal(nomDuSheet('Mes temps 2026', 'JM'), '');            // nom personnel : intact
+  assert.equal(nomDuSheet('REECH-HOURS', ''), '');
 });

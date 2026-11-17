@@ -297,6 +297,7 @@ const FR = {
   'reglages.nomDocs': 'Nom dans les docs',
   'reglages.nomDocs.aide': 'Écrit exactement comme dans l\'onglet TIMESHEET des docs projets (ex. « Julien M »). Il titre aussi ton Agenda.',
   'reglages.initiales': 'Initiales',
+  'reglages.enregistres.nom': 'Réglages enregistrés. Ton Google Sheet s\'appelle maintenant « {nom} ».',
   'reglages.posteDocs': 'Poste',
   'reglages.partage': 'Récap mensuel',
   'reglages.prenomDestinataire': 'Partager à',
