@@ -765,3 +765,48 @@ body.feuille-ouverte { overflow: hidden; }
 /* Projets : doc lié (orange, comme dans Timesheets+) et lien dans la fiche. */
 .doc-lie { color: var(--signal-texte); }
 .lien-doc { display: inline-block; margin: 0 0 12px; }
+
+/* ---------- Animations (courtes ; coupées si l'appareil demande moins d'animations) ---------- */
+
+/* Boutons : léger enfoncement au toucher (les gros boutons l'ont déjà, plus haut ; ici les lignes et segments). */
+.ligne-bouton, .segment, .colonnes button { transition: transform 120ms ease, background-color 160ms ease; }
+.ligne-bouton:not(:disabled):active, .segment:active, .colonnes button:active { transform: scale(0.985); }
+
+/* Créneau qui vient d'être attribué : petit rebond et halo de sa couleur. */
+.bloc.vient-attribue { animation: rebond 420ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes rebond {
+  0% { transform: scale(0.92); box-shadow: 0 0 0 0 color-mix(in srgb, var(--couleur) 55%, transparent); }
+  60% { transform: scale(1.04); box-shadow: 0 0 0 6px color-mix(in srgb, var(--couleur) 0%, transparent); }
+  100% { transform: none; }
+}
+
+/* Anneau de la semaine : il se remplit à la première ouverture de la semaine. */
+.arc-anime { animation: remplir 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes remplir { from { stroke-dasharray: 0 999; } }
+
+/* Confettis : « tout est trié », brouillon prêt. */
+.confettis { position: fixed; inset: 0; pointer-events: none; z-index: 1000; overflow: hidden; }
+.confettis span {
+  position: absolute; width: 8px; height: 12px; border-radius: 2px; opacity: 0;
+  animation: confetti 1100ms cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+}
+.confettis span.rond { width: 8px; height: 8px; border-radius: 50%; }
+@keyframes confetti {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(0); }
+  35% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(calc(var(--tour) / 2)); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + var(--chute))) rotate(var(--tour)); }
+}
+
+/* Brouillon prêt : coche qui se dessine. */
+.succes { display: flex; align-items: center; gap: 12px; margin-top: 10px; animation: apparait 300ms ease both; }
+.succes .note { margin: 0; text-align: left; }
+.succes-coche { flex: none; }
+.succes-cercle { stroke: var(--orange); stroke-dasharray: 120; stroke-dashoffset: 120; animation: trace 500ms ease forwards; }
+.succes-trait { stroke: var(--orange); stroke-dasharray: 30; stroke-dashoffset: 30; animation: trace 350ms 400ms ease forwards; }
+@keyframes trace { to { stroke-dashoffset: 0; } }
+@keyframes apparait { from { opacity: 0; transform: translateY(4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+  .confettis { display: none; }
+}

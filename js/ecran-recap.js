@@ -1,5 +1,5 @@
 // Écran Récap : un mois (flèches), tuiles Travaillé / Base / Au-delà, vue Par projet ou Global.
-import { h, icone, TRACES } from './dom.js';
+import { h, s, icone, TRACES } from './dom.js';
 import { t, calendrier } from './textes.js';
 import { duree, couleurChoix } from './format.js';
 import { categories } from './projets.js';
@@ -131,10 +131,16 @@ function piedExport(etatExport, actions) {
 
 // « Préparer le brouillon d'email » : le récap du mois + la charge à venir, dans les brouillons Gmail (jamais envoyé).
 function piedBrouillon(etat, actions) {
-  return h('div', { class: 'pied-recap' },
+  return h('div', { class: 'pied-recap pied-brouillon' },
     h('button', { class: 'bouton-secondaire bouton-large', onclick: actions.brouillon, disabled: etat.enCours },
       etat.enCours ? t('email.encours') : t('email.bouton')),
-    etat.message ? h('p', { class: 'note', role: 'status' }, etat.message) : null,
+    // Brouillon prêt : une coche qui se dessine, avec le message.
+    etat.reussi ? h('div', { class: 'succes', role: 'status' },
+      s('svg', { class: 'succes-coche', width: 44, height: 44, viewBox: '0 0 44 44', 'aria-hidden': 'true' },
+        s('circle', { cx: 22, cy: 22, r: 19, fill: 'none', 'stroke-width': 3, class: 'succes-cercle' }),
+        s('path', { d: 'M13 22.5l6 6 12-13', fill: 'none', 'stroke-width': 3.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', class: 'succes-trait' })),
+      h('p', { class: 'note' }, etat.message))
+      : etat.message ? h('p', { class: 'note', role: 'status' }, etat.message) : null,
     etat.erreur ? h('p', { class: 'note erreur', role: 'alert' }, etat.erreur) : null,
     etat.lien ? h('a', { class: 'lien lien-centre', href: etat.lien, target: '_blank', rel: 'noopener' }, t('email.ouvrir')) : null);
 }

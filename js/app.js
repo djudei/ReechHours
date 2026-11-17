@@ -8,6 +8,7 @@ import { sourceDemo } from './demo.js';
 import { ecranSemaine } from './ecran-semaine.js';
 import { feuilleTri, projetsPourTri } from './ecran-tri.js';
 import { feuilleDocs } from './ecran-docs.js';
+import { signalerAttribue, confettis } from './animations.js';
 import { feuilleNouveau, heuresParDefaut, heuresDepuisAppui } from './ecran-manuel.js';
 import { ecranProjets } from './ecran-projets.js';
 import { ecranRecap, decalerMois } from './ecran-recap.js';
@@ -186,7 +187,8 @@ const actionsRecap = {
       const r = await preparerBrouillon({ idSheet: lireIdSheet(), mois: etat.vueRecap.mois, aujourdhui, source });
       const message = estDemo ? t('email.demo') : r.a ? t('email.fait', { sujet: r.sujet, a: r.a }) : t('email.faitSansDestinataire', { sujet: r.sujet });
       const lien = estDemo ? '' : `https://mail.google.com/mail/#drafts${r.idMessage ? `?compose=${encodeURIComponent(r.idMessage)}` : ''}`;
-      changerBrouillon({ message, lien });
+      changerBrouillon({ message, lien, reussi: true });
+      confettis({ depuis: document.querySelector('.pied-brouillon .bouton-secondaire'), nombre: 28 });
     } catch (erreur) {
       changerBrouillon({ erreur: t('email.erreur', { detail: erreur.message }) });
     }
@@ -313,10 +315,12 @@ async function choisir(choix) {
   try {
     await attribuer({ idSheet: lireIdSheet(), date, creneau, choix, creneauxDuJour: creneauxDuJour(date), source });
     appliquerChoixLocal(date, creneau.id, choix);
+    signalerAttribue(creneau.id);   // son bloc rebondit dans la grille
     const fini = tri.position + 1 >= tri.file.length;
     changer({ tri: fini ? null : { ...tri, position: tri.position + 1, enCours: false, mode: '' } });
     if (fini) montrerMessage(tri.file.length > 1 ? t('tri.fini') : t('tri.enregistre'));
     else rendre();
+    if (fini && tri.file.length > 1) confettis();   // toute la file est triée : petite fête
   } catch (erreur) {
     changer({ tri: { ...etat.tri, enCours: false, erreur: t('erreur.ecriture', { detail: erreur.message }) } });
     rendre();

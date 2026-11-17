@@ -1,4 +1,5 @@
 // Écran Semaine : anneau de la semaine, colonnes par jour, liste des créneaux du jour choisi.
+import { enCoursDepuis, vientDEtreAttribue } from './animations.js';
 import { h, s, icone, TRACES } from './dom.js';
 import { t } from './textes.js';
 import { ajouterJours } from './semaine.js';
@@ -39,7 +40,7 @@ export function ecranSemaine(etat, actions) {
       h('p', { class: 'secondaire' }, prenom
         ? t('semaine.sousTitre', { periode: periode(lundi, dimanche), prenom })
         : t('semaine.sousTitre.sansPrenom', { periode: periode(lundi, dimanche) }))),
-    carteAnneau(donnees.resume),
+    carteAnneau(donnees.resume, enCoursDepuis(`anneau-${lundi}`, DUREE_ANNEAU_MS)),
     carteColonnes(donnees, jourChoisi, etat.aujourdhui, actions),
     listeDuJour(donnees, jourChoisi, actions, etat.aujourdhui),
     h('p', { class: 'note' }, t('semaine.astuce')),
@@ -49,13 +50,18 @@ export function ecranSemaine(etat, actions) {
   );
 }
 
-function arc(longueur, decalage, couleur) {
+const DUREE_ANNEAU_MS = 700;   // même durée que .arc-anime dans styles.css
+
+// ecoule : ms déjà jouées de l'animation de remplissage (null : pas d'animation).
+function arc(longueur, decalage, couleur, ecoule) {
   return s('circle', { cx: 46, cy: 46, r: RAYON_ANNEAU, fill: 'none', stroke: couleur, 'stroke-width': EPAISSEUR_ANNEAU,
     'stroke-linecap': 'round', 'stroke-dasharray': `${longueur} ${CIRCONFERENCE}`, 'stroke-dashoffset': -decalage,
-    transform: 'rotate(-90 46 46)', class: 'arc' });
+    transform: 'rotate(-90 46 46)', class: ecoule === null ? 'arc' : 'arc arc-anime',
+    ...(ecoule ? { style: `animation-delay: -${ecoule}ms` } : {}) });
 }
 
-function carteAnneau(resume) {
+// anime : ms écoulées depuis la première ouverture de cette semaine (l'anneau se remplit), ou null.
+function carteAnneau(resume, anime = null) {
   const reference = resume.base || resume.travaille + resume.libre || 1;
   const partTravail = Math.min(resume.travaille / reference, 1) * CIRCONFERENCE;
   const partLibre = Math.min(resume.libre / reference, 1) * CIRCONFERENCE;
@@ -63,8 +69,8 @@ function carteAnneau(resume) {
   return h('section', { class: 'carte carte-anneau' },
     s('svg', { width: 92, height: 92, viewBox: '0 0 92 92', role: 'img', 'aria-label': t('semaine.anneau', { pourcent }) },
       s('circle', { cx: 46, cy: 46, r: RAYON_ANNEAU, fill: 'none', stroke: 'var(--piste)', 'stroke-width': EPAISSEUR_ANNEAU }),
-      partTravail > 0 ? arc(partTravail, 0, 'var(--accent)') : null,
-      partLibre > 0 ? arc(Math.max(partLibre, 1), partTravail + 4, 'var(--signal)') : null,
+      partTravail > 0 ? arc(partTravail, 0, 'var(--accent)', anime) : null,
+      partLibre > 0 ? arc(Math.max(partLibre, 1), partTravail + 4, 'var(--signal)', anime) : null,
       s('text', { x: 46, y: 52, 'text-anchor': 'middle', class: 'anneau-texte' }, `${pourcent} %`)),
     h('div', { class: 'anneau-legende' },
       h('span', { class: 'chiffre' }, duree(resume.travaille)),
@@ -141,7 +147,7 @@ function blocCreneau(creneau, projets, ouvrir, variante, position = null) {
   const couleur = couleurChoix(creneau.choix, projets);
   const quand = creneau.journeeEntiere ? t('creneau.journee') : `${creneau.debut} – ${creneau.fin}`;
   return h('button', {
-    class: `bloc${libre ? ' libre' : ''}${variante ? ` ${variante}` : ''}`,
+    class: `bloc${libre ? ' libre' : ''}${variante ? ` ${variante}` : ''}${vientDEtreAttribue(creneau.id) ? ' vient-attribue' : ''}`,
     style: { ...(position || {}), '--couleur': couleur },
     onclick: ouvrir,
     'aria-label': `${creneau.titre || '—'}, ${quand}, ${libelleChoix(creneau.choix, projets)}`
