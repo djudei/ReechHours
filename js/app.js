@@ -1,7 +1,7 @@
 // Démarrage et enchaînement des écrans : connexion → Sheet → Semaine (+ feuille Trier).
 import { CLIENT_ID } from './config.js';
 import { connecter, deconnecter } from './google.js';
-import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, simulerDocs, ecrireDocs, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, renommerManuel, supprimerManuel, sourceGoogle } from './donnees.js';
+import { chargerSemaine, chargerRecap, exporterSheet, preparerBrouillon, simulerDocs, ecrireDocs, enregistrerReglages, creerSheet, verifierSheet, attribuer, ajouterManuel, modifierManuel, supprimerManuel, sourceGoogle } from './donnees.js';
 import { idSheetDepuisLien } from './regles.js';
 import { lundiDe, ajouterJours, dateTexte, resumeSemaine } from './semaine.js';
 import { sourceDemo } from './demo.js';
@@ -80,6 +80,15 @@ function afficher(...contenu) {
     voile.classList.add('stable');
     voile.querySelector('.feuille').scrollTop = defilementFeuille;
   }
+  // Attente (enregistrement en cours) : le voile couvre exactement la partie visible de la feuille, même défilée.
+  const feuille = voile?.querySelector('.feuille');
+  const attente = feuille?.querySelector('.feuille-attente');
+  if (attente) {
+    feuille.classList.add('occupee');
+    attente.style.top = `${feuille.scrollTop}px`;
+    attente.style.height = `${feuille.clientHeight}px`;
+    attente.style.bottom = 'auto';
+  }
 }
 
 // Changer d'onglet ; le Récap relit le Sheet à chaque ouverture (les attributions ont pu changer).
@@ -133,7 +142,7 @@ function rendre() {
   });
   const projets = projetsPourTri(etat.donnees.projets);
   afficher(semaine,
-    etat.tri ? feuilleTri(etat.tri, projets, etat.donnees.projets, { choisir, passer, fermer: fermerTri, renommer, supprimer }) : null,
+    etat.tri ? feuilleTri(etat.tri, projets, etat.donnees.projets, { choisir, passer, fermer: fermerTri, modifier, annulerModification, supprimer }) : null,
     etat.nouveau ? feuilleNouveau(etat.nouveau, projets, etat.donnees.projets, { creer: creerManuel, fermer: fermerNouveau }) : null);
 }
 
@@ -327,22 +336,34 @@ async function choisir(choix) {
   }
 }
 
-// Créneau ajouté à la main : renommer (1er appel = champ, 2e = enregistrer), supprimer (2e appui = confirmer).
-async function renommer(titre) {
+// Créneau ajouté à la main : modifier (1er appel = formulaire, 2e = enregistrer), supprimer (2e appui = confirmer).
+async function modifier(champs) {
   const { tri } = etat;
-  if (titre === undefined) {
-    changer({ tri: { ...tri, mode: 'renommer', erreur: '' } });
+  if (champs === undefined) {
+    changer({ tri: { ...tri, mode: 'modifier', erreur: '' } });
     return rendre();
   }
   const { date, creneau } = tri.file[tri.position];
+  changer({ tri: { ...tri, saisie: champs } });   // en cas d'erreur, le formulaire garde ce qui a été tapé
   await executerSurCreneau(async () => {
-    const nouveauTitre = await renommerManuel({ idSheet: lireIdSheet(), date, id: creneau.id, titre, source });
-    const file = tri.file.map((element, i) => (i !== tri.position ? element
-      : { ...element, creneau: { ...element.creneau, titre: nouveauTitre } }));
+    const nouveau = await modifierManuel({ idSheet: lireIdSheet(), date, id: creneau.id, champs, source });
     await rafraichir();
-    changer({ tri: { ...etat.tri, file, enCours: false, mode: '' } });
-    montrerMessage(t('manuel.renomme'));
+    if (nouveau.date !== date) {
+      // Déplacé sur un autre jour : la fenêtre se ferme, le créneau est à sa nouvelle place.
+      changer({ tri: null });
+    } else {
+      const file = tri.file.map((element, i) => (i !== tri.position ? element
+        : { ...element, creneau: { ...element.creneau, ...nouveau } }));
+      changer({ tri: { ...etat.tri, file, enCours: false, mode: '', saisie: null } });
+    }
+    signalerAttribue(creneau.id);
+    montrerMessage(t('manuel.modifie'));
   });
+}
+
+function annulerModification() {
+  changer({ tri: { ...etat.tri, mode: '', erreur: '', saisie: null } });
+  rendre();
 }
 
 async function supprimer() {

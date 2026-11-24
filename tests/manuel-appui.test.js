@@ -21,3 +21,22 @@ test('nouveau créneau en Pause, Congé ou Ignoré : enregistré avec ce code, s
     assert.equal(ligne[5], code);
   }
 });
+
+test('modifier un créneau manuel : date, heures, titre ; contrôles comme à la création', async () => {
+  const { planModification } = await import('../js/manuels.js');
+  const { lireSaisies } = await import('../js/regles.js');
+  const saisies = lireSaisies([
+    ['m1', '2026-11-16', '10:00', '11:00', '60', '2105', 'manuel', '', 'Atelier', 'non', ''],
+    ['a1', '2026-11-17', '14:00', '15:00', '60', '2034', 'agenda', 'x@google.com_1', 'Réunion', 'oui', ''],
+    ['a2', '2026-11-17', '16:00', '17:00', '60', 'Ignoré', 'agenda', 'y@google.com_1', 'Pas pour moi', 'oui', '']
+  ]);
+  const p = planModification({ date: '2026-11-16', id: 'm1', nouvelleDate: '2026-11-16', debut: '09:30', fin: '11:15', titre: ' Atelier  long ', saisies, maintenant: 'm' });
+  assert.equal(p.numeroLigne, 2);
+  assert.deepEqual(p.ligne, ['m1', '2026-11-16', '09:30', '11:15', 105, '2105', 'manuel', '', 'Atelier long', 'non', 'm']);
+  // Déplacé au 17 : chevauche une réunion comptée → refus ; par-dessus un Ignoré → accepté
+  assert.throws(() => planModification({ date: '2026-11-16', id: 'm1', nouvelleDate: '2026-11-17', debut: '14:30', fin: '15:30', titre: 'x', saisies, maintenant: 'm' }));
+  assert.equal(planModification({ date: '2026-11-16', id: 'm1', nouvelleDate: '2026-11-17', debut: '16:00', fin: '17:00', titre: 'x', saisies, maintenant: 'm' }).ligne[1], '2026-11-17');
+  assert.throws(() => planModification({ date: '2026-11-16', id: 'm1', nouvelleDate: '2026-11-16', debut: '11:00', fin: '10:00', titre: 'x', saisies, maintenant: 'm' }));
+  assert.throws(() => planModification({ date: '2026-11-16', id: 'm1', nouvelleDate: '2026-11-16', debut: '10:10', fin: '11:00', titre: 'x', saisies, maintenant: 'm' }));
+  assert.throws(() => planModification({ date: '2026-11-16', id: 'a1', nouvelleDate: '2026-11-16', debut: '10:00', fin: '11:00', titre: 'x', saisies, maintenant: 'm' }));   // créneau de l'Agenda : jamais
+});

@@ -13,8 +13,8 @@ const TRACE_LOUPE = 'M11 4.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM20 20l-4.2-4
 /**
  * tri : { file: [{ date, creneau }], position, enCours, erreur }
  * projets : projets actifs, les plus utilisés de la semaine d'abord.
- * tri.mode : '' | 'renommer' | 'supprimer' (créneau ajouté à la main : renommer, ou suppression à confirmer)
- * actions : { choisir(choix) (appelé par « Valider »), passer(), fermer(), renommer(titre?), supprimer() }
+ * tri.mode : '' | 'modifier' | 'supprimer' (créneau ajouté à la main : modifier, ou suppression à confirmer)
+ * actions : { choisir(choix) (appelé par « Valider »), passer(), fermer(), modifier(champs?), annulerModification(), supprimer() }
  */
 export function feuilleTri(tri, projets, tousProjets, actions) {
   const { date, creneau } = tri.file[tri.position];
@@ -60,7 +60,7 @@ export function feuilleTri(tri, projets, tousProjets, actions) {
         h('h2', { id: 'titre-tri' }, creneau.titre || '—'),
         h('span', { class: 'secondaire' }, `${duree(creneau.minutes)} · ${creneau.manuel ? t('creneau.manuel') : t('tri.depuisAgenda')}`),
         creneau.choix ? h('span', { class: 'secondaire' }, t('tri.actuel', { choix: libelleChoix(creneau.choix, tousProjets) })) : null),
-      creneau.manuel ? blocManuel(tri, creneau, actions) : null,
+      creneau.manuel ? blocManuel(tri, creneau, actions, date) : null,
       tri.erreur ? h('p', { class: 'erreur feuille-erreur', role: 'alert' }, tri.erreur) : null,
       proposition ? retenir(proposition, h('button', { class: 'bouton-proposition', onclick: choisir(proposition), disabled: tri.enCours },
         h('span', { class: 'pastille pastille-claire' }),
@@ -83,19 +83,34 @@ export function feuilleTri(tri, projets, tousProjets, actions) {
   return feuille;
 }
 
-// Créneau ajouté à la main : le renommer, ou le supprimer (deuxième appui pour confirmer).
-function blocManuel(tri, creneau, actions) {
-  if (tri.mode === 'renommer') {
-    const champ = h('input', { type: 'text', value: creneau.titre, maxlength: LONGUEUR_MAX_TITRE, 'aria-label': t('manuel.intitule') });
-    const valider = (evenement) => { evenement.preventDefault(); actions.renommer(champ.value); };
-    setTimeout(() => champ.select(), 0);
-    return h('form', { class: 'renommage', onsubmit: valider },
-      champ,
-      h('button', { class: 'bouton-principal bouton-petit', type: 'submit', disabled: tri.enCours }, t('manuel.renommer.ok')));
+// Créneau ajouté à la main : tout se modifie (date, heures, intitulé ; le projet avec la liste et « Valider »),
+// ou se supprime (deuxième appui pour confirmer). Pas de clavier à l'ouverture : il s'ouvre en touchant un champ.
+function blocManuel(tri, creneau, actions, date) {
+  if (tri.mode === 'modifier') {
+    const champ = (id, attributs) => h('input', { id, ...attributs });
+    const v = tri.saisie || { nouvelleDate: date, debut: creneau.debut, fin: creneau.fin, titre: creneau.titre };
+    const jour = champ('modif-date', { type: 'date', value: v.nouvelleDate });
+    const debut = champ('modif-debut', { type: 'time', step: 900, value: v.debut });
+    const fin = champ('modif-fin', { type: 'time', step: 900, value: v.fin });
+    const titre = champ('modif-titre', { type: 'text', value: v.titre, maxlength: LONGUEUR_MAX_TITRE, enterkeyhint: 'done' });
+    const ligne = (id, libelle, element) => h('label', { class: 'champ-ligne', for: id }, h('span', {}, libelle), element);
+    const valider = (evenement) => {
+      evenement.preventDefault();
+      actions.modifier({ nouvelleDate: jour.value, debut: debut.value, fin: fin.value, titre: titre.value });
+    };
+    return h('form', { class: 'modification', onsubmit: valider },
+      h('div', { class: 'carte liste formulaire-manuel' },
+        ligne('modif-titre', t('manuel.intitule'), titre),
+        ligne('modif-date', t('manuel.date'), jour),
+        ligne('modif-debut', t('manuel.debut'), debut),
+        ligne('modif-fin', t('manuel.fin'), fin)),
+      h('div', { class: 'groupe-boutons groupe-modification' },
+        h('button', { class: 'bouton-secondaire', type: 'button', onclick: actions.annulerModification, disabled: tri.enCours }, t('manuel.annuler')),
+        h('button', { class: 'bouton-principal', type: 'submit', disabled: tri.enCours }, t('manuel.enregistrerModif'))));
   }
   const confirmer = tri.mode === 'supprimer';
   return h('div', { class: 'actions-manuel' },
-    h('button', { class: 'bouton-secondaire', onclick: () => actions.renommer(), disabled: tri.enCours }, t('manuel.renommer')),
+    h('button', { class: 'bouton-secondaire', onclick: () => actions.modifier(), disabled: tri.enCours }, t('manuel.modifier')),
     h('button', { class: `bouton-secondaire bouton-danger${confirmer ? ' confirmer' : ''}`, onclick: actions.supprimer, disabled: tri.enCours },
       confirmer ? t('manuel.supprimer.confirmer') : t('manuel.supprimer')));
 }

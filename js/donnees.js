@@ -16,7 +16,7 @@ import { NOM_ONGLET_TIMESHEET, STATUTS, idDepuisLien, trimestreDe, planDoc, ecri
 import { normaliser } from './regles.js';
 import { verifierReglages, planReglages } from './reglages-edition.js';
 import { ongletsAEcrire, requetesMiseEnForme, estOngletGenere } from './export-sheet.js';
-import { planAjoutManuel, planRenommage, planSuppression, verifierSansChevauchement } from './manuels.js';
+import { planAjoutManuel, planRenommage, planModification, planSuppression, verifierSansChevauchement } from './manuels.js';
 
 const API_SHEETS = 'https://sheets.googleapis.com/v4/spreadsheets';
 const API_AGENDA = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
@@ -227,6 +227,14 @@ export async function renommerManuel({ idSheet, date, id, titre, source = source
   const plan = planRenommage({ date, id, titre, saisies: sheet.saisies, maintenant: horodatage(new Date()) });
   await source.modifierPlages(idSheet, [{ plage: ligneEntries(plan.numeroLigne), valeurs: [plan.ligne] }]);
   return plan.ligne[8];
+}
+
+/** Modifie un créneau ajouté à la main (date, heures, titre). → la ligne réécrite. */
+export async function modifierManuel({ idSheet, date, id, champs, source = sourceGoogle }) {
+  const sheet = await source.lireSheet(idSheet);
+  const plan = planModification({ date, id, ...champs, saisies: sheet.saisies, maintenant: horodatage(new Date()) });
+  await source.modifierPlages(idSheet, [{ plage: ligneEntries(plan.numeroLigne), valeurs: [plan.ligne] }]);
+  return { date: plan.ligne[1], debut: plan.ligne[2], fin: plan.ligne[3], minutes: plan.ligne[4], titre: plan.ligne[8] };
 }
 
 /**

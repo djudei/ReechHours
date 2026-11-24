@@ -810,3 +810,11 @@ body.feuille-ouverte { overflow: hidden; }
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
   .confettis { display: none; }
 }
+
+/* Feuille occupée (enregistrement) : elle ne défile plus pendant l'attente. */
+.feuille.occupee { overflow: hidden; }
+
+/* Créneau ajouté à la main : formulaire de modification. */
+.modification { display: flex; flex-direction: column; gap: 10px; }
+.groupe-modification { display: flex; gap: 8px; }
+.groupe-modification > button { flex: 1; }

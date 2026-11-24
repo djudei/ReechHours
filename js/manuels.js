@@ -84,6 +84,31 @@ export function planRenommage({ date, id, titre, saisies, maintenant }) {
 }
 
 /**
+ * Modifier un créneau ajouté à la main : date, heures et titre (le projet se change avec « Valider »).
+ * Mêmes contrôles qu'à la création : quarts d'heure, fin après le début, pas de chevauchement avec un créneau
+ * compté ou à attribuer du jour visé (le créneau lui-même mis à part).
+ * → { numeroLigne, ligne } (ligne complète de Saisies, réécrite à la même place).
+ */
+export function planModification({ date, id, nouvelleDate, debut, fin, titre, saisies, maintenant }) {
+  const s = trouverManuel(saisies, date, id);
+  const jour = String(nouvelleDate || date);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) throw new Error(t('manuel.erreur.date'));
+  const debutMinutes = lireHeure(debut);
+  const finMinutes = lireHeure(fin);
+  if (finMinutes <= debutMinutes) throw new Error(t('manuel.erreur.ordre'));
+  const intitule = titrePropre(titre);
+  if (!intitule || intitule.length > LONGUEUR_MAX_TITRE) throw new Error(t('manuel.erreur.titre', { max: LONGUEUR_MAX_TITRE }));
+  const autresDuJour = saisies.filter((x) => x.date === jour && x.debut)
+    .map((x) => ({ id: x.id, titre: x.titre, debut: x.debut, fin: x.fin, minutes: x.minutes, choix: x.code, journeeEntiere: false }));
+  verifierSansChevauchement(autresDuJour, debutMinutes, finMinutes, s.id, s.code);
+  return {
+    numeroLigne: s.numeroLigne,
+    ligne: [s.id, jour, enHeureTexte(debutMinutes), enHeureTexte(finMinutes), finMinutes - debutMinutes, s.code,
+      SOURCES.MANUEL, s.idEvenement || '', intitule, NON, maintenant]
+  };
+}
+
+/**
  * Supprimer : numéro de la ligne à retirer (seulement une ligne ajoutée à la main, de ce jour).
  */
 export function planSuppression({ date, id, saisies }) {
